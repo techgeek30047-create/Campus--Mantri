@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd gitGfg-campus-mantri-1530e7079a1f && npm run build",
+  "outputDirectory": "gitGfg-campus-mantri-1530e7079a1f/dist",
+  "installCommand": "cd gitGfg-campus-mantri-1530e7079a1f && npm install",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
