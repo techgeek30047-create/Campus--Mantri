@@ -6,10 +6,9 @@ const Footer: React.FC = () => {
     <footer className="bg-gray-900 text-white py-8 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-          {/* Brand Section */}
+          {/* Brand Section (logo only) */}
           <div className="flex items-center space-x-2 mb-4 md:mb-0">
-            <Code className="h-5 w-5 text-green-400" />
-            <span className="text-lg font-semibold">Campus Mantri Task Tracker</span>
+            <Code className="h-5 w-5 text-green-400" aria-hidden="true" />
           </div>
           
           {/* Contact Us Section */}
@@ -44,8 +43,8 @@ const Footer: React.FC = () => {
             </div>
 
             <div className="text-center md:text-right text-sm text-gray-400">
-              <p>© 2024 GeeksforGeeks. All rights reserved.</p>
-              <p className="mt-1">Developed by GeeksforGeeks</p>
+              <p>© 2025 GeeksforGeeks. All rights reserved.</p>
+              <p className="mt-1">Developed by GeeksforGeeks Community Team</p>
             </div>
           </div>
         </div>
