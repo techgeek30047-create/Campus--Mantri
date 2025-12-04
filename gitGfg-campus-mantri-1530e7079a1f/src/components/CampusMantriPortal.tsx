@@ -350,7 +350,6 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Task Submitter</h1>
-                <p className="text-green-100 text-sm">Campus Mantri Dashboard</p>
               </div>
             </div>
             

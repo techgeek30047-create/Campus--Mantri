@@ -26,7 +26,6 @@ const Header: React.FC<HeaderProps> = ({
               <h1 className="text-xl font-bold text-gray-900">
                 {currentView === 'admin' ? 'Admin Dashboard' : 'Campus Mantri Portal'}
               </h1>
-              <p className="text-gray-500 text-sm">GeeksforGeeks Task Management</p>
             </div>
           </div>
           
