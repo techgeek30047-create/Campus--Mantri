@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Campus Mantri Task Tracker - GeeksforGeeks</title>
-    <meta name="description" content="Campus Mantri Task Tracking System for GeeksforGeeks">
+    <title>Campus Portal Task Tracker - GeeksforGeeks</title>
+    <meta name="description" content="Campus Task Tracking System for GeeksforGeeks">
     <meta name="theme-color" content="#16a34a">
     
     <!-- Preconnect to external domains -->
@@ -123,7 +123,7 @@
     <div id="root">
       <div class="loading-container">
         <div class="spinner"></div>
-        <p class="loading-text">Loading Campus Mantri Portal...</p>
+        <p class="loading-text">Loading Campus Portal...</p>
       </div>
     </div>
     
@@ -164,7 +164,7 @@
       // Timeout fallback
       setTimeout(function() {
         const root = document.getElementById('root');
-        if (root && root.innerHTML.includes('Loading Campus Mantri Portal')) {
+        if (root && root.innerHTML.includes('Loading Campus Portal')) {
           document.body.classList.remove('loading');
           root.innerHTML = `
             <div class="error-container">

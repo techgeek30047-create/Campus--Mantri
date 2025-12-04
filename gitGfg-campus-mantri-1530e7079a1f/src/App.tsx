@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // Lazy load components to prevent loading issues
 const AuthWrapper = React.lazy(() => import('./components/AuthWrapper'));
@@ -59,88 +60,28 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
-  const [currentView, setCurrentView] = useState<'portal' | 'admin' | 'login' | 'dbtest'>('portal');
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Check URL for admin access
+  const navigate = useNavigate();
+
+  // Expose admin open helpers
   useEffect(() => {
     try {
-      const checkAdminRoute = () => {
-        const path = window.location.pathname;
-        const hash = window.location.hash;
-        
-        // Check for admin or dbtest in path or hash
-        if (path === '/admin' || path.startsWith('/admin') || hash === '#admin' || hash.includes('admin')) {
-          setCurrentView('login');
-        } else if (path === '/dbtest' || path.startsWith('/dbtest') || hash === '#dbtest' || hash.includes('dbtest')) {
-          setCurrentView('dbtest');
-        }
-      };
-      
-      checkAdminRoute();
-      
-      // Listen for hash changes and popstate events
-      const handleHashChange = () => {
-        checkAdminRoute();
-      };
-      
-      const handlePopState = () => {
-        checkAdminRoute();
-      };
-      
-      window.addEventListener('hashchange', handleHashChange);
-      window.addEventListener('popstate', handlePopState);
-      
-      return () => {
-        window.removeEventListener('hashchange', handleHashChange);
-        window.removeEventListener('popstate', handlePopState);
-      };
-    } catch (err) {
-      console.error('Error in useEffect:', err);
-      setError('Failed to initialize application');
-    }
-  }, []);
-
-  // Handle database test access
-  const handleDatabaseTest = () => {
-    try {
-      setCurrentView('dbtest');
-      window.history.pushState({}, '', '/dbtest');
-    } catch (err) {
-      console.error('Error accessing database test:', err);
-    }
-  };
-
-  // Handle admin access from anywhere in the app
-  const handleAdminAccess = () => {
-    try {
-      setCurrentView('login');
-      window.history.pushState({}, '', '/admin');
-    } catch (err) {
-      console.error('Error accessing admin:', err);
-    }
-  };
-
-  // Expose admin access globally
-  useEffect(() => {
-    try {
-      (window as any).openAdminPanel = handleAdminAccess;
-      (window as any).openDatabaseTest = handleDatabaseTest;
+      (window as any).openAdminPanel = () => navigate('/admin/login');
+      (window as any).openDatabaseTest = () => navigate('/dbtest');
     } catch (err) {
       console.error('Error setting up admin access:', err);
     }
-  }, []);
+  }, [navigate]);
 
   const handleAdminLogin = () => {
     try {
       setLoading(true);
       setTimeout(() => {
         setIsAdminAuthenticated(true);
-        setCurrentView('admin');
-        window.history.pushState({}, '', '/admin');
         setLoading(false);
+        navigate('/admin');
       }, 500);
     } catch (err) {
       console.error('Error during admin login:', err);
@@ -152,8 +93,7 @@ function App() {
   const handleLogout = () => {
     try {
       setIsAdminAuthenticated(false);
-      setCurrentView('portal');
-      window.history.pushState({}, '', '/');
+      navigate('/');
     } catch (err) {
       console.error('Error during logout:', err);
     }
@@ -176,25 +116,19 @@ function App() {
     );
   }
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
   try {
     return (
       <ErrorBoundary>
         <div className="min-h-screen bg-gray-50">
           <React.Suspense fallback={<LoadingSpinner />}>
-            {currentView === 'portal' && <AuthWrapper />}
-            {currentView === 'login' && (
-              <AdminLogin onLogin={handleAdminLogin} onBack={() => setCurrentView('portal')} />
-            )}
-            {currentView === 'admin' && isAdminAuthenticated && (
-              <AdminDashboard onLogout={handleLogout} />
-            )}
-            {currentView === 'dbtest' && (
-              <DatabaseConnectionTest />
-            )}
+            <Routes>
+              <Route path="/" element={<AuthWrapper />} />
+              <Route path="/admin/login" element={<AdminLogin onLogin={handleAdminLogin} onBack={() => navigate('/')} />} />
+              <Route path="/admin" element={isAdminAuthenticated ? <AdminDashboard onLogout={handleLogout} /> : <Navigate to="/admin/login" replace />} />
+              <Route path="/dbtest" element={<DatabaseConnectionTest />} />
+              {/* Fallback to home */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </React.Suspense>
         </div>
       </ErrorBoundary>
@@ -210,7 +144,7 @@ function App() {
             onClick={() => window.location.reload()}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
-            Reload Application
+            Refresh Application
           </button>
         </div>
       </div>

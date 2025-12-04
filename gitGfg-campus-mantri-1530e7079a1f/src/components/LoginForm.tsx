@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import { authService, AuthUser, LoginCredentials } from '../lib/auth';
 
 interface LoginFormProps {
   onSuccess: (user: AuthUser) => void;
-  onSwitchToRegister: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: ''
@@ -48,12 +47,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) 
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+    <div className="relative login-hero-bg p-8 rounded-3xl bg-green-100">
+      <div className="college-anim-layer">
+        <span className="college-emoji delay-1" style={{ left: '8%', top: '20%' }}>🎓</span>
+        <span className="college-emoji slow delay-2" style={{ left: '24%', top: '60%' }}>📚</span>
+        <span className="college-emoji fast delay-3" style={{ left: '60%', top: '18%' }}>🏫</span>
+        <span className="college-emoji delay-4" style={{ left: '78%', top: '50%' }}>✏️</span>
+      </div>
+
+      <div className="bg-gray-50 rounded-2xl shadow-xl p-8 border border-gray-200 max-w-md mx-auto">
       <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="w-20 h-20 bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
           <LogIn className="h-10 w-10 text-white" />
         </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome</h2>
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign in</h2>
         <p className="text-gray-600">Sign in to your account</p>
       </div>
 
@@ -106,13 +113,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 px-6 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-indigo-600 to-emerald-600 text-white py-4 px-6 rounded-lg hover:from-indigo-700 hover:to-emerald-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50"
         >
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
 
 
+      </div>
     </div>
   );
 };

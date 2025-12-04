@@ -1,7 +1,7 @@
 {
   "name": "gitgfg-campus-mantri-1530e7079a1f",
   "version": "1.0.0",
-  "description": "Campus Mantri Task Management Portal",
+  "description": "Task Management Portal",
   "main": "index.js",
   "scripts": {
     "dev": "cd gitGfg-campus-mantri-1530e7079a1f && npm run dev",
@@ -11,7 +11,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": ["campus", "mantri", "geeksforgeeks", "task-tracker"],
-  "author": "Campus Mantri Team",
+  "author": "Development Team",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

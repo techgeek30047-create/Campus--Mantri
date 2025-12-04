@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* College-themed floating icons animation */
+.college-anim-layer {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	overflow: hidden;
+}
+
+.college-emoji {
+	position: absolute;
+	font-size: 1.6rem;
+	opacity: 0.85;
+	will-change: transform, opacity;
+	animation: floatY 6s ease-in-out infinite;
+}
+
+@keyframes floatY {
+	0% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+	50% { transform: translateY(-18px) rotate(8deg); opacity: 1; }
+	100% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+}
+
+.college-emoji.slow { animation-duration: 9s; }
+.college-emoji.fast { animation-duration: 5s; }
+.college-emoji.delay-1 { animation-delay: 0s; }
+.college-emoji.delay-2 { animation-delay: 1.5s; }
+.college-emoji.delay-3 { animation-delay: 3s; }
+.college-emoji.delay-4 { animation-delay: 4.5s; }
+.login-hero-bg {
+	/* Slightly deeper light-green backdrop */
+	background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #eefaf4 100%);
+}
