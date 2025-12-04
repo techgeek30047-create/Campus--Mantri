@@ -18,53 +18,16 @@ const Footer: React.FC = () => {
               <Mail className="h-5 w-5 text-green-400 mr-2" />
               Contact Us
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {/* Email */}
               <div className="flex items-center space-x-2 text-gray-300">
                 <Mail className="h-4 w-4 text-green-400" />
-                <a 
-                  href="mailto:campus@geeksforgeeks.org" 
+                <a
+                  href="mailto:campus@geeksforgeeks.org"
                   className="hover:text-green-400 transition-colors"
                 >
                   campus@geeksforgeeks.org
                 </a>
-              </div>
-              
-              {/* Phone Numbers */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 text-gray-300">
-                  <Phone className="h-4 w-4 text-green-400" />
-                  <a 
-                    href="tel:+918130267878" 
-                    className="hover:text-green-400 transition-colors"
-                  >
-                    +91 81302 67878
-                  </a>
-                </div>
-                <div className="flex items-center space-x-2 text-gray-300 ml-6">
-                  <a 
-                    href="tel:+918130255700" 
-                    className="hover:text-green-400 transition-colors"
-                  >
-                    +91 81302 55700
-                  </a>
-                </div>
-                <div className="flex items-center space-x-2 text-gray-300 ml-6">
-                  <a 
-                    href="tel:+917705919078" 
-                    className="hover:text-green-400 transition-colors"
-                  >
-                    +91 77059 19078
-                  </a>
-                </div>
-                <div className="flex items-center space-x-2 text-gray-300 ml-6">
-                  <a 
-                    href="tel:+916388562443" 
-                    className="hover:text-green-400 transition-colors"
-                  >
-                    +91 63885 62443
-                  </a>
-                </div>
               </div>
             </div>
           </div>
@@ -74,15 +37,15 @@ const Footer: React.FC = () => {
         <div className="pt-6 border-t border-gray-800">
           <div className="flex flex-col md:flex-row items-center justify-between">
             <div className="flex items-center space-x-2 text-gray-300 mb-4 md:mb-0">
-            <span>Created with</span>
-            <Heart className="h-4 w-4 text-red-400" />
-            <span>by</span>
-            <span className="font-semibold text-orange-400">💚GeeksforGeeks</span>
-          </div>
-            
+              <span>Created with</span>
+              <Heart className="h-4 w-4 text-red-400" />
+              <span>by</span>
+              <span className="font-semibold text-orange-400">GeeksforGeeks</span>
+            </div>
+
             <div className="text-center md:text-right text-sm text-gray-400">
-              <p>© 2024 GeeksforGeeks Campus Mantri Platform. All rights reserved.</p>
-              <p className="mt-1">Developed by GeeksforGeeks Campus Program</p>
+              <p>© 2024 GeeksforGeeks. All rights reserved.</p>
+              <p className="mt-1">Developed by GeeksforGeeks</p>
             </div>
           </div>
         </div>
