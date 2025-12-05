@@ -339,51 +339,55 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50">
       {/* Header */}
-      <header className="bg-gradient-to-r from-green-600 to-green-700 shadow-lg">
+      <header className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-2xl border-b-4 border-emerald-400">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div className="bg-white p-2 rounded-lg shadow-md">
-                <Target className="h-8 w-8 text-green-600" />
+          <div className="flex items-center justify-between h-20">
+            <div className="flex items-center space-x-4">
+              <div className="bg-white/20 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-white/30">
+                <Target className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-white">Task Submitter</h1>
+                <h1 className="text-2xl font-bold text-white tracking-wide">Task Submitter</h1>
+                <p className="text-emerald-100 text-sm">Complete tasks and build your portfolio</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
               <button
                 onClick={onLogout}
-                className="bg-white/20 hover:bg-white/30 text-white p-2 rounded-lg transition-colors"
+                className="bg-white/20 hover:bg-red-500/30 text-white px-4 py-2 rounded-lg transition-all duration-300 font-medium flex items-center gap-2 border border-white/30 hover:border-red-400/50"
               >
                 <LogOut className="h-5 w-5" />
+                <span>Logout</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Welcome Card - Centered */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-full max-w-2xl">
-            <div className="flex items-center space-x-4">
-              <div className="bg-green-100 p-3 rounded-full">
-                <User className="h-8 w-8 text-green-600" />
+        <div className="flex justify-center mb-16">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl border border-emerald-100/50 p-8 w-full max-w-2xl hover:shadow-3xl transition-all duration-300">
+            <div className="flex items-center space-x-6">
+              <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-4 rounded-2xl shadow-md">
+                <User className="h-10 w-10 text-emerald-600" />
               </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Welcome, {campusMantri.name}!</h2>
-                <p className="text-gray-600">{campusMantri.college_name}</p>
+              <div className="flex-1">
+                <h2 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Welcome, {campusMantri.name}!</h2>
+                <p className="text-gray-600 text-lg font-medium mt-1">{campusMantri.college_name}</p>
               </div>
             </div>
             
-            <div className="mt-6 flex justify-center">
-              <div className="bg-green-50 rounded-lg p-4 text-center">
-                <CheckCircle className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold text-gray-900">{userLeaderboardData?.tasks_completed || 0}</p>
-                <p className="text-green-600 font-medium">Approved Tasks</p>
+            <div className="mt-8 flex justify-center">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center border border-emerald-200/50 shadow-md">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <CheckCircle className="h-10 w-10 text-emerald-600" />
+                  <span className="text-4xl font-bold text-gray-900">{userLeaderboardData?.tasks_completed || 0}</span>
+                </div>
+                <p className="text-emerald-700 font-semibold text-lg">Tasks Completed</p>
               </div>
             </div>
           </div>
@@ -395,18 +399,20 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
 
             {/* Announcements */}
             {announcements.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center space-x-2 mb-4">
-                  <Bell className="h-6 w-6 text-blue-600" />
-                  <h3 className="text-xl font-bold text-gray-900">Latest Announcements</h3>
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100/50 p-8 hover:shadow-2xl transition-all duration-300">
+                <div className="flex items-center space-x-3 mb-8">
+                  <div className="bg-gradient-to-br from-blue-100 to-cyan-100 p-3 rounded-xl">
+                    <Bell className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900">Latest Announcements</h3>
                 </div>
                 <div className="space-y-4">
                   {announcements.map((announcement) => (
-                    <div key={announcement.id} className="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg">
-                      <h4 className="font-semibold text-gray-900">{announcement.title}</h4>
-                      <p className="text-gray-700 mt-1">{announcement.message}</p>
-                      <p className="text-sm text-gray-500 mt-2">
-                        {new Date(announcement.created_at).toLocaleDateString()}
+                    <div key={announcement.id} className="border-l-4 border-blue-500 bg-gradient-to-r from-blue-50 to-cyan-50 p-5 rounded-r-xl hover:shadow-md transition-all">
+                      <h4 className="font-bold text-gray-900 text-lg">{announcement.title}</h4>
+                      <p className="text-gray-700 mt-2 leading-relaxed">{announcement.message}</p>
+                      <p className="text-sm text-gray-500 mt-3 font-medium">
+                        📅 {new Date(announcement.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   ))}
@@ -415,21 +421,23 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
             )}
 
             {/* Task Submission Form */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center space-x-2 mb-6">
-                <Plus className="h-6 w-6 text-green-600" />
-                <h3 className="text-xl font-bold text-gray-900">Submit Task with Proof</h3>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100/50 p-8 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center space-x-3 mb-8">
+                <div className="bg-gradient-to-br from-emerald-100 to-teal-100 p-3 rounded-xl">
+                  <Plus className="h-6 w-6 text-emerald-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">Submit Task with Proof</h3>
               </div>
 
               <form onSubmit={handleSubmitTask} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Task *
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Select Task <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={selectedTask}
                     onChange={(e) => setSelectedTask(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white font-medium shadow-sm hover:shadow-md transition-all"
                     required
                   >
                     <option value="">Choose a task...</option>
@@ -442,21 +450,24 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                   
                   {/* Show selected task description */}
                   {selectedTask && (
-                    <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                      <h4 className="font-medium text-blue-900 mb-2">Task Details:</h4>
+                    <div className="mt-4 p-5 bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl">
+                      <h4 className="font-bold text-blue-900 mb-3 flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Task Details:
+                      </h4>
                       {(() => {
                         const task = tasks.find(t => t.id === selectedTask);
                         return task ? (
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             <div>
-                              <span className="font-medium text-blue-800">Title: </span>
-                              <span className="text-blue-700">{task.title}</span>
+                              <span className="font-semibold text-blue-800">Title: </span>
+                              <span className="text-blue-700 font-medium">{task.title}</span>
                             </div>
                             {task.description && (
                               <div>
-                                <span className="font-medium text-blue-800">Description: </span>
+                                <span className="font-semibold text-blue-800">Description: </span>
                                 <div 
-                                  className="text-blue-700 mt-1 whitespace-pre-wrap break-words leading-relaxed"
+                                  className="text-blue-700 mt-2 whitespace-pre-wrap break-words leading-relaxed bg-white/50 p-3 rounded-lg"
                                   dangerouslySetInnerHTML={{
                                     __html: task.description.replace(
                                       /https?:\/\/[^\s]+/g, 
@@ -466,8 +477,8 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                                 />
                               </div>
                             )}
-                            <div className="text-sm text-blue-600">
-                              Due: {new Date(task.due_date).toLocaleDateString()}
+                            <div className="text-sm font-medium text-blue-600 bg-white/50 p-2 rounded inline-block">
+                              📅 Due: {new Date(task.due_date).toLocaleDateString()}
                             </div>
                           </div>
                         ) : null;
@@ -477,27 +488,27 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Task Submission Description *
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Task Submission Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={submissionText}
                     onChange={(e) => setSubmissionText(e.target.value)}
                     rows={4}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white font-medium shadow-sm hover:shadow-md transition-all resize-none"
                     placeholder="Describe what you accomplished for this task..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Proof Type *
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Proof Type <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={proofType}
                     onChange={(e) => setProofType(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white font-medium shadow-sm hover:shadow-md transition-all"
                     required
                   >
                     <option value="linkedin">LinkedIn Post/Activity</option>
@@ -508,17 +519,17 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Proof Link * (Required)
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    Proof Link <span className="text-red-500">*</span> (Required)
                   </label>
-                  <div className="flex items-center space-x-2">
-                    <Link className="h-5 w-5 text-gray-400" />
+                  <div className="flex items-center gap-3 bg-white px-4 py-3 border border-gray-300 rounded-xl focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent shadow-sm hover:shadow-md transition-all">
+                    <Link className="h-5 w-5 text-emerald-500 flex-shrink-0" />
                     <input
                       type="url"
                       value={submissionLink}
                       onChange={(e) => setSubmissionLink(e.target.value)}
                       required
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="flex-1 outline-none font-medium"
                       placeholder={
                         proofType === 'linkedin' ? 'https://linkedin.com/posts/your-post' :
                         proofType === 'google_docs' ? 'https://docs.google.com/document/...' :
@@ -527,18 +538,18 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                       }
                     />
                   </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {proofType === 'linkedin' && 'Share your LinkedIn post about this task'}
-                    {proofType === 'google_docs' && 'Share your Google Docs/Sheets document'}
-                    {proofType === 'drive_link' && 'Share your file from Google Drive or other cloud storage'}
-                    {proofType === 'other' && 'Share any relevant proof link or document'}
+                  <p className="text-sm text-gray-500 mt-2 font-medium">
+                    {proofType === 'linkedin' && '🔗 Share your LinkedIn post about this task'}
+                    {proofType === 'google_docs' && '📄 Share your Google Docs/Sheets document'}
+                    {proofType === 'drive_link' && '☁️ Share your file from Google Drive or other cloud storage'}
+                    {proofType === 'other' && '🔗 Share any relevant proof link or document'}
                   </p>
                 </div>
 
                 <button
                   type="submit"
                   disabled={submissionLoading === selectedTask}
-                  className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-gray-400 disabled:to-gray-400 text-white py-4 px-4 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
                 >
                   {submissionLoading === selectedTask ? (
                     <>
@@ -556,35 +567,41 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
             </div>
 
             {/* My Submissions */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center space-x-2 mb-6">
-                <FileText className="h-6 w-6 text-blue-600" />
-                <h3 className="text-xl font-bold text-gray-900">My Submissions</h3>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100/50 p-8 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center space-x-3 mb-8">
+                <div className="bg-gradient-to-br from-blue-100 to-cyan-100 p-3 rounded-xl">
+                  <FileText className="h-6 w-6 text-blue-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">My Submissions</h3>
               </div>
 
               {submissions.length === 0 ? (
-                <div className="text-center py-8">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No submissions yet. Submit your first task above!</p>
+                <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl border border-gray-200">
+                  <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500 font-medium text-lg">No submissions yet. Submit your first task above!</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {submissions.map((submission) => (
-                    <div key={submission.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={submission.id} className="border border-gray-300 rounded-xl p-5 bg-gradient-to-br from-white to-gray-50 hover:shadow-lg transition-all duration-300 hover:border-emerald-300">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900">
+                          <h4 className="font-bold text-gray-900 text-lg">
                             {submission.admin_tasks?.title}
                           </h4>
                           {submission.submission_text && (
-                            <p className="text-gray-600 mt-1">{submission.submission_text}</p>
+                            <p className="text-gray-600 mt-2 leading-relaxed">{submission.submission_text}</p>
                           )}
-                          <div className="flex items-center space-x-4 mt-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(submission.status)}`}>
-                              {submission.status.toUpperCase()}
+                          <div className="flex flex-wrap items-center gap-3 mt-3">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${
+                              submission.status === 'approved' ? 'bg-green-100 text-green-800 border-green-300' :
+                              submission.status === 'rejected' ? 'bg-red-100 text-red-800 border-red-300' :
+                              'bg-yellow-100 text-yellow-800 border-yellow-300'
+                            }`}>
+                              ✓ {submission.status.toUpperCase()}
                             </span>
                             {submission.proof_type && (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium border bg-blue-100 text-blue-800 border-blue-200">
+                              <span className="px-3 py-1 rounded-full text-xs font-bold border bg-blue-100 text-blue-800 border-blue-300">
                                 {submission.proof_type.replace('_', ' ').toUpperCase()}
                               </span>
                             )}
@@ -594,23 +611,23 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                               href={submission.proof_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mt-2 font-medium"
+                              className="inline-flex items-center gap-2 text-emerald-600 hover:text-emerald-800 mt-3 font-bold transition-colors"
                             >
                               <Link className="h-4 w-4" />
-                              <span className="text-sm">View Proof Link</span>
+                              <span className="text-sm">View Proof</span>
                             </a>
                           )}
                         </div>
-                        <div className="text-right text-sm text-gray-500">
-                          <p>{new Date(submission.submitted_at).toLocaleDateString()}</p>
-                          <p>{new Date(submission.submitted_at).toLocaleTimeString()}</p>
+                        <div className="text-right text-sm text-gray-500 ml-4 flex-shrink-0">
+                          <p className="font-semibold">{new Date(submission.submitted_at).toLocaleDateString()}</p>
+                          <p className="text-xs mt-1">{new Date(submission.submitted_at).toLocaleTimeString()}</p>
                         </div>
                       </div>
                       
                       {submission.admin_feedback && (
-                        <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                          <p className="text-sm font-medium text-gray-700">Admin Feedback:</p>
-                          <p className="text-sm text-gray-600 mt-1">{submission.admin_feedback}</p>
+                        <div className="mt-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                          <p className="text-sm font-bold text-blue-900">💬 Admin Feedback:</p>
+                          <p className="text-sm text-blue-700 mt-2 leading-relaxed">{submission.admin_feedback}</p>
                         </div>
                       )}
                     </div>
@@ -623,64 +640,68 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Profile Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl shadow-xl border border-emerald-200/50 p-8 hover:shadow-2xl transition-all duration-300">
               <div className="text-center">
-                <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <User className="h-10 w-10 text-green-600" />
+                <div className="bg-gradient-to-br from-emerald-100 to-teal-100 w-24 h-24 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md">
+                  <User className="h-12 w-12 text-emerald-600" />
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">{campusMantri.name}</h3>
-                <p className="text-gray-600">{campusMantri.college_name}</p>
+                <h3 className="text-xl font-bold text-gray-900">{campusMantri.name}</h3>
+                <p className="text-gray-600 font-medium mt-1">{campusMantri.college_name}</p>
               </div>
               
-              <div className="mt-6 space-y-3">
-                <div className="flex items-center space-x-3 text-sm">
-                  <Mail className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">{campusMantri.email}</span>
+              <div className="mt-6 space-y-4">
+                <div className="flex items-center gap-3 text-sm bg-white/50 p-3 rounded-lg">
+                  <Mail className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <span className="text-gray-700 font-medium break-all">{campusMantri.email}</span>
                 </div>
-                <div className="flex items-center space-x-3 text-sm">
-                  <Phone className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">{campusMantri.phone}</span>
+                <div className="flex items-center gap-3 text-sm bg-white/50 p-3 rounded-lg">
+                  <Phone className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <span className="text-gray-700 font-medium">{campusMantri.phone}</span>
                 </div>
-                <div className="flex items-center space-x-3 text-sm">
-                  <User className="h-4 w-4 text-gray-400" />
-                  <span className="text-gray-600">{campusMantri.gfg_mantri_id}</span>
+                <div className="flex items-center gap-3 text-sm bg-white/50 p-3 rounded-lg">
+                  <User className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                  <span className="text-gray-700 font-medium">{campusMantri.gfg_mantri_id}</span>
                 </div>
               </div>
             </div>
 
             {/* Available Tasks */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Target className="h-6 w-6 text-green-600" />
-                <h3 className="text-lg font-bold text-gray-900">Available Tasks</h3>
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100/50 p-8 hover:shadow-2xl transition-all duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-gradient-to-br from-green-100 to-emerald-100 p-3 rounded-xl">
+                  <Target className="h-6 w-6 text-emerald-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900">Available Tasks</h3>
               </div>
               
               {tasks.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No active tasks available</p>
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500 font-medium">No active tasks available</p>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {tasks.slice(0, 5).map((task) => (
-                    <div key={task.id} className="border border-gray-200 rounded-lg p-3">
-                      <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
+                    <div key={task.id} className="border border-gray-300 rounded-xl p-4 bg-gradient-to-br from-white to-gray-50 hover:shadow-md transition-all hover:border-emerald-300">
+                      <h4 className="font-bold text-gray-900 text-sm">{task.title}</h4>
                       {task.description && (
                         <div className="text-xs text-gray-600 mt-2 space-y-1">
                           <div 
-                            className="whitespace-pre-wrap break-words"
+                            className="whitespace-pre-wrap break-words line-clamp-2"
                             dangerouslySetInnerHTML={{
                               __html: task.description
-                                .replace(/https?:\/\/[^\s]+/g, '<a href="$&" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">$&</a>')
+                                .replace(/https?:\/\/[^\s]+/g, '<a href="$&" target="_blank" rel="noopener noreferrer" class="text-emerald-600 hover:text-emerald-800 underline font-semibold">Link</a>')
                                 .substring(0, 150) + (task.description.length > 150 ? '...' : '')
                             }}
                           />
                         </div>
                       )}
-                      <div className="text-xs text-gray-500 mt-2">
-                        Due: {new Date(task.due_date).toLocaleDateString()}
+                      <div className="text-xs text-emerald-600 mt-3 font-semibold">
+                        📅 Due: {new Date(task.due_date).toLocaleDateString()}
                       </div>
                     </div>
                   ))}
                   {tasks.length > 5 && (
-                    <p className="text-sm text-gray-500 text-center">
+                    <p className="text-sm text-gray-500 text-center font-medium py-2">
                       +{tasks.length - 5} more tasks available
                     </p>
                   )}
