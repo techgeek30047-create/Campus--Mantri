@@ -350,7 +350,6 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white tracking-wide">Task Submitter</h1>
-                <p className="text-emerald-100 text-sm">Complete tasks and build your portfolio</p>
               </div>
             </div>
             
