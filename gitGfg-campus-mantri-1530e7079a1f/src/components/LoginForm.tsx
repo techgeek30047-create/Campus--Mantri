@@ -50,7 +50,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     <div className="relative login-hero-bg p-8 rounded-3xl bg-green-100">
       <div className="college-anim-layer">
         <span className="college-emoji delay-1" style={{ left: '8%', top: '20%' }}>🎓</span>
-        <span className="college-emoji slow delay-2" style={{ left: '24%', top: '60%' }}>📚</span>
         <span className="college-emoji fast delay-3" style={{ left: '60%', top: '18%' }}>🏫</span>
         <span className="college-emoji delay-4" style={{ left: '78%', top: '50%' }}>✏️</span>
       </div>
