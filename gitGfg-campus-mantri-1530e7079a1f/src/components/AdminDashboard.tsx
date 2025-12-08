@@ -559,6 +559,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
                         {task.assigned_to ? 'Specific Mantri' : 'All Mantris'}
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
+                        {new Date(task.due_date).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-lg ${
+                          task.status === 'active' ? 'bg-green-500/20 text-green-300 border border-green-500/50' :
+                          task.status === 'completed' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/50' :
+                          'bg-slate-500/20 text-slate-300 border border-slate-500/50'
+                        }`}>
+                          {task.status.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                        {task.assigned_to ? 'Specific Mantri' : 'All Mantris'}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {new Date(task.due_date).toLocaleDateString()}
                       </td>
