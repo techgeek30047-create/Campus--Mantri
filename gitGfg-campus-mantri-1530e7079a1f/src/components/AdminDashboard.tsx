@@ -384,138 +384,147 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Admin Dashboard</h2>
-          <p className="text-gray-600">Task Management</p>
+      <header className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-2xl border-b-4 border-indigo-400/50">
+        <div className="px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-6 sm:space-y-0">
+            <div className="text-white">
+              <h1 className="text-4xl font-bold tracking-tight">Admin Dashboard</h1>
+              <p className="text-indigo-100 text-lg font-medium mt-2">Task Management & Analytics</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleClearOldTasks}
+                disabled={clearingTasks}
+                className="bg-red-500/90 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm disabled:opacity-50 transform hover:-translate-y-1"
+              >
+                <Archive className="h-4 w-4" />
+                <span>{clearingTasks ? 'Clearing...' : 'Clear Completed'}</span>
+              </button>
+              <button
+                onClick={handleClearOldAnnouncements}
+                disabled={clearingAnnouncements}
+                className="bg-orange-500/90 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm disabled:opacity-50 transform hover:-translate-y-1"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>{clearingAnnouncements ? 'Clearing...' : 'Clear Announcements'}</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('leaderboard')}
+                className="bg-yellow-500/90 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
+              >
+                <Trophy className="h-5 w-5" />
+                <span>Leaderboard</span>
+              </button>
+              <button
+                onClick={() => setCurrentView('tasks')}
+                className="bg-purple-500/90 hover:bg-purple-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
+              >
+                <Target className="h-5 w-5" />
+                <span>Manage Tasks</span>
+              </button>
+              <button
+                onClick={() => setShowMantriList(true)}
+                className="bg-blue-500/90 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
+              >
+                <Search className="h-5 w-5" />
+                <span>Find Mantris</span>
+              </button>
+              <button
+                onClick={exportData}
+                className="bg-green-500/90 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
+              >
+                <Download className="h-5 w-5" />
+                <span>Export Data</span>
+              </button>
+              <button
+                onClick={onLogout}
+                className="bg-red-600/90 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleClearOldTasks}
-            disabled={clearingTasks}
-            className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50"
-          >
-            <Archive className="h-4 w-4" />
-            <span>{clearingTasks ? 'Clearing...' : 'Clear Completed Tasks'}</span>
-          </button>
-          <button
-            onClick={handleClearOldAnnouncements}
-            disabled={clearingAnnouncements}
-            className="bg-gradient-to-r from-orange-600 to-orange-700 text-white px-4 py-2 rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50"
-          >
-            <Trash2 className="h-4 w-4" />
-            <span>{clearingAnnouncements ? 'Clearing...' : 'Clear Announcements'}</span>
-          </button>
-          <button
-            onClick={() => setCurrentView('leaderboard')}
-            className="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white px-6 py-3 rounded-lg hover:from-yellow-700 hover:to-yellow-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <Trophy className="h-5 w-5" />
-            <span>Leaderboard</span>
-          </button>
-          <button
-            onClick={() => setCurrentView('tasks')}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <Target className="h-5 w-5" />
-            <span>Manage Tasks</span>
-          </button>
-          <button
-            onClick={() => setShowMantriList(true)}
-            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <Search className="h-5 w-5" />
-            <span>Find Mantris</span>
-          </button>
-          <button
-            onClick={exportData}
-            className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <Download className="h-5 w-5" />
-            <span>Export Data</span>
-          </button>
-          <button
-            onClick={onLogout}
-            className="bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Logout</span>
-          </button>
+      </header>
+
+      <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Navigation Tabs */}
+        <div className="flex space-x-2 bg-slate-800/50 backdrop-blur-sm p-2 rounded-xl border border-slate-700 w-fit">
+          {[
+            { key: 'dashboard', label: 'Dashboard', icon: TrendingUp },
+            { key: 'tasks', label: 'Task Management', icon: Target },
+            { key: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+            { key: 'submissions', label: 'Submissions', icon: CheckCircle }
+          ].map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setCurrentView(tab.key as any)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
+                  currentView === tab.key
+                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        {[
-          { key: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-          { key: 'tasks', label: 'Task Management', icon: Target },
-          { key: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-          { key: 'submissions', label: 'Submissions', icon: CheckCircle }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.key}
-              onClick={() => setCurrentView(tab.key as any)}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                currentView === tab.key
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Dashboard View */}
-      {currentView === 'dashboard' && (
-        <>
-          {/* Enhanced Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {statCards.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <div key={index} className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-gray-600 text-sm font-medium">{stat.title}</p>
-                      <p className="text-3xl font-bold text-gray-900 mt-2">{stat.value}</p>
-                      <p className={`text-sm mt-1 ${stat.change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+        {/* Dashboard View */}
+        {currentView === 'dashboard' && (
+          <>
+            {/* Enhanced Stats Cards - Grid Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              {statCards.map((stat, index) => {
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={index}
+                    className="group relative bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-2xl p-7 border border-slate-600 hover:border-indigo-400/50 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-3xl"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 rounded-2xl transition-all duration-500"></div>
+                    <div className="relative z-10">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-slate-300 text-sm font-bold uppercase tracking-wider">{stat.title}</p>
+                        <div className={`${stat.color} p-3 rounded-xl shadow-lg`}>
+                          <Icon className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                      <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
+                      <p className={`text-sm font-semibold ${stat.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
                         {stat.change} from last month
                       </p>
                     </div>
-                    <div className={`${stat.color} p-3 rounded-lg`}>
-                      <Icon className="h-6 w-6 text-white" />
-                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </>
-      )}
+                );
+              })}
+            </div>
+          </>
+        )}
 
       {/* Task Management View */}
       {currentView === 'tasks' && (
-        <div className="space-y-6">
+        <div className="space-y-8">
           <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold text-gray-900">Task Management</h3>
-            <div className="flex space-x-3">
+            <h3 className="text-3xl font-bold text-white">Task Management</h3>
+            <div className="flex gap-3">
               <button
                 onClick={() => setShowAnnouncementForm(true)}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2"
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold transform hover:-translate-y-1"
               >
                 <Bell className="h-5 w-5" />
                 <span>New Announcement</span>
               </button>
               <button
                 onClick={() => setShowTaskForm(true)}
-                className="bg-gradient-to-r from-green-600 to-green-700 text-white px-6 py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition-all duration-200 flex items-center space-x-2"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold transform hover:-translate-y-1"
               >
                 <Plus className="h-5 w-5" />
                 <span>Create Task</span>
@@ -524,30 +533,30 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
           </div>
 
           {/* Active Admin Tasks */}
-          <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900">Active Tasks</h4>
+          <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-2xl border border-slate-600 overflow-hidden">
+            <div className="p-6 border-b border-slate-600 bg-gradient-to-r from-indigo-600/20 to-purple-600/20">
+              <h4 className="text-xl font-bold text-white">Active Tasks</h4>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-slate-800/50 border-b border-slate-600">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Task</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Assigned To</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Due Date</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-600">
                   {adminTasks.map((task) => (
-                    <tr key={task.id} className="hover:bg-gray-50">
+                    <tr key={task.id} className="hover:bg-slate-700/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{task.title}</div>
-                          <div className="text-sm text-gray-500">{task.description}</div>
+                          <div className="text-sm font-bold text-white">{task.title}</div>
+                          <div className="text-sm text-slate-400">{task.description}</div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
                         {task.assigned_to ? 'Specific Mantri' : 'All Mantris'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
