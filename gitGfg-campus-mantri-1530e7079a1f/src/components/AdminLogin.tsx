@@ -46,36 +46,42 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
     }
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-700/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 right-20 w-80 h-80 bg-teal-700/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+      </div>
+
       {/* Back Button */}
       {onBack && (
         <button
           onClick={handleBack}
-          className="fixed top-6 left-6 bg-white/20 hover:bg-white/30 text-white p-3 rounded-full transition-all duration-200 flex items-center space-x-2 backdrop-blur-sm border border-white/20"
+          className="fixed top-6 left-6 bg-white/20 hover:bg-white/30 text-white p-3 rounded-xl transition-all duration-300 flex items-center gap-2 backdrop-blur-sm border border-white/20 font-semibold hover:scale-110 transform"
         >
           <ArrowLeft className="h-5 w-5" />
           <span className="hidden sm:inline">Back to Portal</span>
         </button>
       )}
       
-      <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md border border-gray-100">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Shield className="h-10 w-10 text-white" />
+      <div className="relative z-10 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-10 w-full max-w-md border border-emerald-200/30 hover:shadow-3xl transition-all duration-500">
+        <div className="text-center mb-10">
+          <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg transform hover:scale-110 transition-all duration-300">
+            <Shield className="h-12 w-12 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Admin Access</h2>
-          <p className="text-gray-600">Sign in to the admin dashboard</p>
+          <h2 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-3">Admin Access</h2>
+          <p className="text-slate-600 font-medium">Sign in to the admin dashboard</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-50/80 border border-red-200/50 text-red-700 px-5 py-3 rounded-xl mb-6 font-semibold backdrop-blur-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-slate-700 mb-3">
               Username
             </label>
             <input
@@ -83,13 +89,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
               required
               value={credentials.username}
               onChange={(e) => setCredentials({...credentials, username: e.target.value})}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="w-full px-5 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 bg-white/50 font-medium placeholder-slate-400"
               placeholder="Enter admin username"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-slate-700 mb-3">
               Password
             </label>
             <div className="relative">
@@ -98,13 +104,13 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
                 required
                 value={credentials.password}
                 onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                className="w-full px-5 py-3 pr-14 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 bg-white/50 font-medium placeholder-slate-400"
                 placeholder="Enter admin password"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-emerald-600 transition-colors duration-300 p-1"
               >
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
@@ -114,15 +120,25 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50"
+            className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 hover:from-emerald-600 hover:via-teal-600 hover:to-cyan-600 text-white py-4 px-6 rounded-xl font-bold text-lg shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-r-transparent"></div>
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <Shield className="h-5 w-5" />
+                <span>Sign In</span>
+              </>
+            )}
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-500">
-            Authorized admin access only
+        <div className="mt-8 text-center">
+          <p className="text-sm text-slate-600 font-medium">
+            🔒 Authorized admin access only
           </p>
         </div>
       </div>
