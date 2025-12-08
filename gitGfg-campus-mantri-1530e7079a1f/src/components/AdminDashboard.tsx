@@ -572,21 +572,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         </span>
                       </td>
                     </tr>
-                        {task.assigned_to ? 'Specific Mantri' : 'All Mantris'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(task.due_date).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          task.status === 'active' ? 'bg-green-100 text-green-800' :
-                          task.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {task.status}
-                        </span>
-                      </td>
-                    </tr>
                   ))}
                 </tbody>
               </table>
