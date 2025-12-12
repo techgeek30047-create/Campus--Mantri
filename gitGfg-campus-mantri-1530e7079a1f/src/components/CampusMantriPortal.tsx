@@ -411,7 +411,7 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                       <h4 className="font-bold text-gray-900 text-lg">{announcement.title}</h4>
                       <p className="text-gray-700 mt-2 leading-relaxed">{announcement.message}</p>
                       <p className="text-sm text-gray-500 mt-3 font-medium">
-                        📅 {new Date(announcement.created_at).toLocaleDateString()}
+                        Date: {new Date(announcement.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   ))}
@@ -477,7 +477,7 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                               </div>
                             )}
                             <div className="text-sm font-medium text-blue-600 bg-white/50 p-2 rounded inline-block">
-                              📅 Due: {new Date(task.due_date).toLocaleDateString()}
+                              Date Due: {new Date(task.due_date).toLocaleDateString()}
                             </div>
                           </div>
                         ) : null;

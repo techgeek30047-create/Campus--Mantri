@@ -332,7 +332,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
+  const formatDate = (date?: string | null) => {
+    if (!date) return 'N/A';
+    try {
+      return new Date(date).toLocaleDateString();
+    } catch {
+      return 'N/A';
+    }
+  };
+
   const exportData = () => {
+    if (!mantris || mantris.length === 0) {
+      alert('No campus mantris to export.');
+      return;
+    }
+
     const csvData = mantris.map(mantri => {
       const mantriTasks = tasks.filter(task => task.assigned_to === mantri.id);
       const completed = mantriTasks.filter(task => task.status === 'completed').length;
@@ -348,8 +362,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         'Points': leaderboardEntry?.total_points || 0,
         'Rank': leaderboardEntry?.rank_position || 'N/A',
         'Success Rate': mantriTasks.length > 0 ? Math.round((completed / mantriTasks.length) * 100) + '%' : '0%',
-      priority: 'task_1',
-        'Joined Date': new Date(mantri.joined_date).toLocaleDateString()
+        'Joined Date': formatDate(mantri.joined_date)
       };
     });
 
@@ -560,7 +573,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         {task.assigned_to ? 'Specific Mantri' : 'All Mantris'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
-                        {new Date(task.due_date).toLocaleDateString()}
+                        {formatDate(task.due_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-lg ${
@@ -685,7 +698,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(submission.submission_date).toLocaleDateString()}
+                        {formatDate(submission.submission_date)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
