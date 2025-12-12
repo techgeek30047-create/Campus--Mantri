@@ -42,10 +42,20 @@ const DatabaseConnectionTest: React.FC = () => {
     const a = document.createElement('a');
     a.href = url;
     a.download = `supabase-connection-test-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      // Append only if possible; some environments may not allow appending
+      document.body.appendChild(a);
+      a.click();
+    } catch (err) {
+      // Fallback: try clicking without appending
+      try { a.click(); } catch (e) { /* ignore */ }
+    } finally {
+      // Remove the element only if it was appended
+      if (a.parentNode) {
+        try { a.parentNode.removeChild(a); } catch (e) { /* ignore removal errors */ }
+      }
+      URL.revokeObjectURL(url);
+    }
   };
 
   const getStatusIcon = (status: string) => {
