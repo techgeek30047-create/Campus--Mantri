@@ -1,4 +1,4 @@
-import { Archive, Bell, CheckCircle, Clock, Download, FileText, Link, LogOut, Plus, Search, Target, Trash2, TrendingUp, Trophy, Upload, Users } from 'lucide-react';
+import { Archive, Bell, CheckCircle, Clock, Download, FileText, Link, LogOut, Plus, Search, Target, Trash2, TrendingUp, Trophy, Upload, Users, Menu, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission } from '../lib/supabase';
 
@@ -26,6 +26,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
   const [showMantriList, setShowMantriList] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'tasks' | 'leaderboard' | 'submissions'>('dashboard');
@@ -458,10 +459,40 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                 <LogOut className="h-5 w-5" />
                 <span>Logout</span>
               </button>
+            {/* Mobile menu toggle - visible on small screens */}
+            <div className="sm:hidden">
+              <button
+                onClick={() => setShowMobileMenu((s) => !s)}
+                aria-label="Open mobile menu"
+                className="p-2 bg-white/10 text-white rounded-lg shadow-sm"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </div>
             </div>
           </div>
         </div>
       </header>
+
+    {/* Mobile menu panel */}
+    {showMobileMenu && (
+      <div className="sm:hidden fixed top-20 right-4 z-50 w-[90%] max-w-xs bg-slate-800/95 rounded-xl p-4 shadow-2xl">
+        <div className="flex justify-end mb-2">
+          <button onClick={() => setShowMobileMenu(false)} className="text-slate-300">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="flex flex-col gap-3">
+          <button onClick={handleClearOldTasks} className="w-full text-left px-4 py-2 rounded-lg bg-red-500 text-white">{clearingTasks ? 'Clearing...' : 'Clear Completed'}</button>
+          <button onClick={handleClearOldAnnouncements} className="w-full text-left px-4 py-2 rounded-lg bg-orange-500 text-white">{clearingAnnouncements ? 'Clearing...' : 'Clear Announcements'}</button>
+          <button onClick={() => { setCurrentView('leaderboard'); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-yellow-500 text-white">Leaderboard</button>
+          <button onClick={() => { setCurrentView('tasks'); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-purple-600 text-white">Manage Tasks</button>
+          <button onClick={() => { setShowMantriList(true); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-blue-500 text-white">Find Mantris</button>
+          <button onClick={() => { exportData(); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-green-500 text-white">Export Data</button>
+          <button onClick={() => { onLogout(); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-red-600 text-white">Logout</button>
+        </div>
+      </div>
+    )}
 
       <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Navigation Tabs */}
