@@ -1,4 +1,4 @@
-import { Archive, Bell, CheckCircle, Clock, Download, FileText, Link, LogOut, Plus, Search, Target, Trash2, TrendingUp, Trophy, Upload, Users, Menu, X } from 'lucide-react';
+import { Archive, Bell, CheckCircle, Clock, Download, FileText, Link, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Upload, Users, Menu, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission } from '../lib/supabase';
 
@@ -32,6 +32,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [currentView, setCurrentView] = useState<'dashboard' | 'tasks' | 'leaderboard' | 'submissions'>('dashboard');
   const [clearingTasks, setClearingTasks] = useState(false);
   const [clearingAnnouncements, setClearingAnnouncements] = useState(false);
+  const [recomputingLeaderboard, setRecomputingLeaderboard] = useState(false);
 
   // Task form state
   const [taskFormData, setTaskFormData] = useState({
@@ -120,6 +121,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       const { data: leaderboardData, error: leaderboardError } = await supabase
         .from('leaderboard')
         .select('*')
+        .gt('tasks_completed', 0)
         .order('tasks_completed', { ascending: false });
 
       if (leaderboardError) {
@@ -155,6 +157,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         setTaskSubmissions(submissionsData);
         setLeaderboard(leaderboardData || []);
 
+        // Fetch exact total count (Supabase returns a 1,000 row cap by default)
+        const { count: exactCount } = await supabase
+          .from('campus_mantris')
+          .select('*', { count: 'exact', head: true });
+
+        const totalMantrisCount = typeof exactCount === 'number' ? exactCount : (mantrisData.length || 0);
+
         // Calculate comprehensive stats
         const activeTasks = adminTasksData.filter(task => task.status === 'active').length;
         const completedTasks = (tasksData || []).filter(task => task.status === 'completed').length;
@@ -163,7 +172,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         const activeColleges = new Set(mantrisData.map(m => m.college_name)).size;
 
         setStats({
-          totalMantris: mantrisData.length,
+          totalMantris: totalMantrisCount,
           activeTasks,
           completedTasks,
           totalTasks: (tasksData || []).length,
@@ -230,9 +239,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
  //Approval task with points backend //
   const handleApproveSubmission = async (submissionId: string) => {
   try {
+    // Defensive check: ensure submission is still in 'submitted' state before approving
+    const { data: sub, error: fetchErr } = await supabase
+      .from('task_submissions')
+      .select('status')
+      .eq('id', submissionId)
+      .maybeSingle();
+
+    if (fetchErr) {
+      console.error('Error fetching submission status:', fetchErr);
+      return;
+    }
+
+    if (!sub || sub.status !== 'submitted') {
+      console.warn('Submission already processed or not found, skipping approval:', sub?.status);
+      fetchDashboardData();
+      return;
+    }
+
     const { error } = await supabase.rpc('approve_submission', {
-      submission_id: submissionId,
-      points_value: 0
+      submission_id: submissionId
     });
 
     if (error) {
@@ -299,21 +325,64 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const filterMantris = () => {
-    let filtered = mantris;
+  const handleRecomputeLeaderboard = async () => {
+    try {
+      if (!confirm('Recompute leaderboard now? This will sync task counts with approved submissions.')) return;
+      setRecomputingLeaderboard(true);
+      const { data, error } = await supabase.rpc('recompute_leaderboard');
+      if (error) {
+        console.error('Recompute error:', error);
+        alert('Recompute failed: ' + (error.message || 'unknown error'));
+        return;
+      }
+      console.log('Recompute result:', data);
+      fetchDashboardData();
+      alert('Leaderboard recomputed successfully');
+    } catch (err) {
+      console.error('Error running recompute:', err);
+      alert('Recompute failed — check console for details');
+    } finally {
+      setRecomputingLeaderboard(false);
+    }
+  };
 
-    if (searchTerm) {
-      filtered = filtered.filter(mantri => 
-        mantri.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        mantri.gfg_mantri_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        mantri.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  // Helper to fetch all rows from Supabase in pages (avoids 1000 row default limit)
+  const fetchAllRows = async (table: string, select = '*', pageSize = 1000) => {
+    const results: any[] = [];
+    let from = 0;
+    while (true) {
+      const to = from + pageSize - 1;
+      const { data, error } = await supabase.from(table).select(select).range(from, to);
+      if (error) {
+        console.error(`Error fetching ${table}:`, error.message || error);
+        break;
+      }
+      if (!data || data.length === 0) break;
+      results.push(...data);
+      if (data.length < pageSize) break;
+      from += pageSize;
+    }
+    return results;
+  };
+
+  const filterMantris = () => {
+    // Defensive filtering that tolerates missing fields
+    let filtered = mantris || [];
+
+    const term = (searchTerm || '').trim().toLowerCase();
+    const college = (collegeFilter || '').trim().toLowerCase();
+
+    if (term) {
+      filtered = filtered.filter(mantri => {
+        const name = (mantri.name || '').toLowerCase();
+        const id = (mantri.gfg_mantri_id || '').toLowerCase();
+        const email = (mantri.email || '').toLowerCase();
+        return name.includes(term) || id.includes(term) || email.includes(term);
+      });
     }
 
-    if (collegeFilter) {
-      filtered = filtered.filter(mantri => 
-        mantri.college_name.toLowerCase().includes(collegeFilter.toLowerCase())
-      );
+    if (college) {
+      filtered = filtered.filter(mantri => ((mantri.college_name || '').toLowerCase().includes(college)));
     }
 
     setFilteredMantris(filtered);
@@ -342,22 +411,24 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     }
   };
 
-  const exportData = () => {
-    if (!mantris || mantris.length === 0) {
+  const exportData = async () => {
+    // Fetch all rows directly from the DB so export contains everything (including duplicates and empty rows)
+    const allMantris = await fetchAllRows('campus_mantris', '*');
+    if (!allMantris || allMantris.length === 0) {
       alert('No campus mantris to export.');
       return;
     }
 
-    const csvData = mantris.map(mantri => {
+    const csvData = allMantris.map(mantri => {
       const mantriTasks = tasks.filter(task => task.assigned_to === mantri.id);
       const completed = mantriTasks.filter(task => task.status === 'completed').length;
       const leaderboardEntry = leaderboard.find(entry => entry.mantri_id === mantri.id);
       
       return {
-        Name: mantri.name,
-        Email: mantri.email,
-        College: mantri.college_name,
-        'GFG ID': mantri.gfg_mantri_id,
+        Name: mantri.name ?? 'EMPTY',
+        Email: mantri.email ?? 'EMPTY',
+        College: mantri.college_name ?? 'EMPTY',
+        'GFG ID': mantri.gfg_mantri_id ?? 'EMPTY',
         'Total Tasks': mantriTasks.length,
         'Completed Tasks': completed,
         'Points': leaderboardEntry?.total_points || 0,
@@ -385,7 +456,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     { title: 'Total Campus Mantris', value: stats.totalMantris, icon: Users, color: 'bg-blue-500', change: '+12%' },
     { title: 'Active Admin Tasks', value: stats.activeTasks, icon: Target, color: 'bg-purple-500', change: '+8%' },
     { title: 'Pending Submissions', value: stats.pendingSubmissions, icon: Clock, color: 'bg-yellow-500', change: '-5%' },
-    { title: 'Completed Tasks', value: stats.completedTasks, icon: CheckCircle, color: 'bg-green-500', change: '+15%' },
     { title: 'Active Colleges', value: stats.activeColleges, icon: Users, color: 'bg-indigo-500', change: '+3%' }
   ];
 
@@ -398,7 +468,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
       <header className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-2xl border-b-4 border-indigo-400/50">
         <div className="px-4 sm:px-6 lg:px-8 py-8">
@@ -451,6 +521,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
               >
                 <Download className="h-5 w-5" />
                 <span>Export Data</span>
+              </button>
+              <button
+                onClick={handleRecomputeLeaderboard}
+                disabled={recomputingLeaderboard}
+                className="bg-amber-400/90 hover:bg-amber-500 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1 disabled:opacity-50"
+              >
+                <RefreshCw className="h-5 w-5" />
+                <span>{recomputingLeaderboard ? 'Recomputing...' : 'Recompute Leaderboard'}</span>
               </button>
               <button
                 onClick={onLogout}
@@ -645,7 +723,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campus Mantri</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">College</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tasks Completed</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -659,9 +736,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {entry.campus_mantris?.college_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {entry.tasks_completed}
                       </td>
                     </tr>
                   ))}
@@ -970,8 +1044,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
             <div className="overflow-y-auto max-h-96 p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredMantris.map((mantri) => {
-                  const mantriTasks = tasks.filter(task => task.assigned_to === mantri.id);
-                  const completed = mantriTasks.filter(task => task.status === 'completed').length;
+                  // Consider both tasks assigned to the mantri and global tasks (assigned_to NULL)
+                  const mantriTasks = tasks.filter(task => !task.assigned_to || task.assigned_to === mantri.id);
+                  // Completed should be counted from approved submissions, not task.status
+                  const completed = taskSubmissions.filter(s => s.mantri_id === mantri.id && s.status === 'approved').length;
                   const leaderboardEntry = leaderboard.find(entry => entry.mantri_id === mantri.id);
                   const successRate = mantriTasks.length > 0 ? Math.round((completed / mantriTasks.length) * 100) : 0;
                   
@@ -979,10 +1055,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                     <div key={mantri.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h3 className="font-semibold text-gray-900">{mantri.name}</h3>
-                          <p className="text-sm text-gray-600">{mantri.college_name}</p>
-                          <p className="text-sm text-green-600 font-mono">{mantri.gfg_mantri_id}</p>
-                          <p className="text-xs text-gray-500">{mantri.email}</p>
+                          <h3 className="font-semibold text-gray-900">{mantri.name || 'EMPTY'}</h3>
+                          <p className="text-sm text-gray-600">{mantri.college_name || 'EMPTY'}</p>
+                          <p className="text-sm text-green-600 font-mono">{mantri.gfg_mantri_id || 'EMPTY'}</p>
+                          <p className="text-xs text-gray-500">{mantri.email || 'EMPTY'}</p>
                           <div className="mt-2 flex items-center space-x-4">
                             <span className="text-xs text-gray-600">Tasks: {completed}/{mantriTasks.length}</span>
                             <span className="text-xs text-yellow-600 font-semibold">Points: {leaderboardEntry?.total_points || 0}</span>
@@ -993,7 +1069,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
                           mantri.status === 'active' ? 'bg-green-100 text-green-800' : 
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {mantri.status}
+                          {mantri.status || 'unknown'}
                         </span>
                       </div>
                     </div>
