@@ -177,10 +177,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     .replace(/[^a-z0-9]/g, '')
     .trim();
 
+// Fetch ALL campus mantris (no 1000 limit)
+const allMantris = await fetchAllRows('campus_mantris', 'college_name,status');
+
+// Normalize & count unique active colleges
 const activeColleges = new Set(
-  mantrisData
-    .filter(m => m.status === 'active')
-    .map(m => normalizeCollege(m.college_name))
+  allMantris
+    .filter((m: any) => m.status === 'active')
+    .map((m: any) => normalizeCollege(m.college_name))
     .filter(Boolean)
 ).size;
 
