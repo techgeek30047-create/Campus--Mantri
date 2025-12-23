@@ -283,21 +283,39 @@ const activeColleges = new Set(
 };
 
   const handleRejectSubmission = async (submissionId: string, feedback: string) => {
-    try {
-      const { error } = await supabase
-        .from('task_submissions')
-        .update({
-          status: 'rejected',
-          admin_feedback: feedback || 'Task needs improvement. Please resubmit.'
-        })
-        .eq('id', submissionId);
+  // ✅ 1. OPTIMISTIC UI UPDATE (instant reject feel)
+  setTaskSubmissions(prev =>
+    prev.map(sub =>
+      sub.id === submissionId
+        ? {
+            ...sub,
+            status: 'rejected',
+            admin_feedback: feedback || 'Task needs improvement. Please resubmit.'
+          }
+        : sub
+    )
+  );
 
-      if (error) throw error;
+  try {
+    // ✅ 2. Backend update (background me)
+    const { error } = await supabase
+      .from('task_submissions')
+      .update({
+        status: 'rejected',
+        admin_feedback: feedback || 'Task needs improvement. Please resubmit.'
+      })
+      .eq('id', submissionId);
+
+    if (error) {
+      console.error('Reject failed:', error);
+      // rollback only if backend fails
       fetchDashboardData();
-    } catch (error) {
-      console.error('Error rejecting submission:', error);
     }
-  };
+  } catch (err) {
+    console.error('Reject error:', err);
+    fetchDashboardData();
+  }
+};
 
   const handleClearOldTasks = async () => {
     try {
