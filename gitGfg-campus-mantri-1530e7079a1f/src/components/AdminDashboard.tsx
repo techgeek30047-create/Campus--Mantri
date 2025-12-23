@@ -255,38 +255,30 @@ const activeColleges = new Set(
   };
 
  //Approval task with points backend //
-  const handleApproveSubmission = async (submissionId: string) => {
+ const handleApproveSubmission = async (submissionId: string) => {
+  // ✅ 1. OPTIMISTIC UI UPDATE (instant approve feel)
+  setTaskSubmissions(prev =>
+    prev.map(sub =>
+      sub.id === submissionId
+        ? { ...sub, status: 'approved' }
+        : sub
+    )
+  );
+
   try {
-    // Defensive check: ensure submission is still in 'submitted' state before approving
-    const { data: sub, error: fetchErr } = await supabase
-      .from('task_submissions')
-      .select('status')
-      .eq('id', submissionId)
-      .maybeSingle();
-
-    if (fetchErr) {
-      console.error('Error fetching submission status:', fetchErr);
-      return;
-    }
-
-    if (!sub || sub.status !== 'submitted') {
-      console.warn('Submission already processed or not found, skipping approval:', sub?.status);
-      fetchDashboardData();
-      return;
-    }
-
+    // ✅ 2. Backend RPC (background me chalega)
     const { error } = await supabase.rpc('approve_submission', {
       submission_id: submissionId
     });
 
     if (error) {
-      console.error('Error approving submission:', error);
-      return;
+      console.error('Approve failed:', error);
+      // rollback only if backend fails
+      fetchDashboardData();
     }
-
+  } catch (err) {
+    console.error('Approve error:', err);
     fetchDashboardData();
-  } catch (error) {
-    console.error('Error approving submission:', error);
   }
 };
 
