@@ -169,7 +169,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         const completedTasks = (tasksData || []).filter(task => task.status === 'completed').length;
         const pendingSubmissions = submissionsData.filter(sub => sub.status === 'submitted').length;
         const totalPointsAwarded = submissionsData.reduce((sum, sub) => sum + (sub.points_awarded || 0), 0);
-        const activeColleges = new Set(mantrisData.map(m => m.college_name)).size;
+        const normalizeCollege = (name?: string) =>
+  (name || '')
+    .toLowerCase()
+    .replace(/\(.*?\)/g, '')
+    .replace(/university|college|of|engineering|technology|institute|campus/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+
+const activeColleges = new Set(
+  mantrisData
+    .filter(m => m.status === 'active')
+    .map(m => normalizeCollege(m.college_name))
+    .filter(Boolean)
+).size;
+
 
         setStats({
           totalMantris: totalMantrisCount,
