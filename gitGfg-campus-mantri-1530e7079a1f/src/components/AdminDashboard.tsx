@@ -167,7 +167,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         // Calculate comprehensive stats
         const activeTasks = adminTasksData.filter(task => task.status === 'active').length;
         const completedTasks = (tasksData || []).filter(task => task.status === 'completed').length;
-        const pendingSubmissions = submissionsData.filter(sub => sub.status === 'submitted').length;
+        const { count: pendingCount, error: pendingError } = await supabase
+  .from('task_submissions')
+  .select('*', { count: 'exact', head: true })
+  .eq('status', 'submitted');
+
+const pendingSubmissions = pendingCount ?? 0;
+
         const totalPointsAwarded = submissionsData.reduce((sum, sub) => sum + (sub.points_awarded || 0), 0);
         const normalizeCollege = (name?: string) =>
   (name || '')
@@ -189,15 +195,16 @@ const activeColleges = new Set(
 ).size;
 
 
-        setStats({
-          totalMantris: totalMantrisCount,
-          activeTasks,
-          completedTasks,
-          totalTasks: (tasksData || []).length,
-          pendingSubmissions,
-          totalPointsAwarded,
-          activeColleges
-        });
+setStats({
+  totalMantris: totalMantrisCount,
+  activeTasks,
+  completedTasks,
+  totalTasks: (tasksData || []).length,
+  pendingSubmissions, // ✅ exact count now
+  totalPointsAwarded,
+  activeColleges
+});
+
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
