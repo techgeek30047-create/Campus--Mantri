@@ -35,7 +35,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [recomputingLeaderboard, setRecomputingLeaderboard] = useState(false);
   // 🔹 Submissions pagination state
 const [page, setPage] = useState(1);
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 250;
 const [totalSubmissions, setTotalSubmissions] = useState(0);
 
 
