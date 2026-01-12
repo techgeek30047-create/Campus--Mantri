@@ -33,6 +33,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [clearingTasks, setClearingTasks] = useState(false);
   const [clearingAnnouncements, setClearingAnnouncements] = useState(false);
   const [recomputingLeaderboard, setRecomputingLeaderboard] = useState(false);
+  // 🔹 Submissions pagination state
+const [page, setPage] = useState(1);
+const PAGE_SIZE = 20;
+const [totalSubmissions, setTotalSubmissions] = useState(0);
+
 
   // Task form state
   const [taskFormData, setTaskFormData] = useState({
@@ -48,10 +53,22 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
     message: '',
     priority: 'normal' as const
   });
+  useEffect(() => {
+  if (currentView === 'submissions') {
+    setPage(1);
+  }
+}, [currentView]);
+
 
   useEffect(() => {
     fetchDashboardData();
   }, []);
+  useEffect(() => {
+  if (currentView === 'submissions') {
+    fetchDashboardData();
+  }
+}, [page, currentView]);
+
 
   useEffect(() => {
     filterMantris();
@@ -96,26 +113,38 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
       console.log('Admin tasks data:', adminTasksData);
 
       // Fetch task submissions with proof
-      const { data: submissionsData, error: submissionsError } = await supabase
-        .from('task_submissions')
-        .select(`
-          *,
-          admin_tasks (
-            title,
-            description,
-            due_date,
-            priority
-          ),
-          campus_mantris (
-            name,
-            email,
-            college_name,
-            gfg_mantri_id
-          )
-        `)
-        .order('submitted_at', { ascending: false });
+      // 🔹 Fetch task submissions (PAGINATED)
+const from = (page - 1) * PAGE_SIZE;
+const to = from + PAGE_SIZE - 1;
 
-      if (submissionsError) console.error('Submissions error:', submissionsError);
+const { data: submissionsData, count, error: submissionsError } = await supabase
+  .from('task_submissions')
+  .select(
+    `
+    *,
+    admin_tasks (
+      title,
+      description,
+      due_date,
+      priority
+    ),
+    campus_mantris (
+      name,
+      email,
+      college_name,
+      gfg_mantri_id
+    )
+    `,
+    { count: 'exact' }
+  )
+  .order('submitted_at', { ascending: false })
+  .range(from, to);
+
+if (submissionsError) console.error('Submissions error:', submissionsError);
+
+setTaskSubmissions(submissionsData || []);
+setTotalSubmissions(count || 0);
+
 
       // Fetch leaderboard with simple query first
       const { data: leaderboardData, error: leaderboardError } = await supabase
@@ -154,7 +183,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
         setMantris(mantrisData || []);
         setTasks(tasksData || []);
         setAdminTasks(adminTasksData);
-        setTaskSubmissions(submissionsData);
         setLeaderboard(leaderboardData || []);
 
         // Fetch exact total count (Supabase returns a 1,000 row cap by default)
@@ -174,7 +202,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
 const pendingSubmissions = pendingCount ?? 0;
 
-        const totalPointsAwarded = submissionsData.reduce((sum, sub) => sum + (sub.points_awarded || 0), 0);
+       const { data: allApprovedSubs } = await supabase
+  .from('task_submissions')
+  .select('points_awarded')
+  .eq('status', 'approved');
+
+const totalPointsAwarded =
+  allApprovedSubs?.reduce((sum, s) => sum + (s.points_awarded || 0), 0) || 0;
+
         const normalizeCollege = (name?: string) =>
   (name || '')
     .toLowerCase()
@@ -783,111 +818,151 @@ setStats({
 
       {/* Submissions View */}
       {currentView === 'submissions' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold text-gray-900">Task Submissions with Proof</h3>
-          </div>
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h3 className="text-2xl font-bold text-gray-900">
+        Task Submissions with Proof
+      </h3>
+    </div>
 
-          <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <h4 className="text-lg font-semibold text-gray-900">All Submissions</h4>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campus Mantri</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submission</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proof</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {taskSubmissions.map((submission) => (
-                    <tr key={submission.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{submission.campus_mantris?.name}</div>
-                          <div className="text-sm text-gray-500">{submission.campus_mantris?.college_name}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{submission.admin_tasks?.title}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-900 max-w-xs truncate">{submission.submission_text}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {submission.proof_url ? (
-                          <div className="flex items-center space-x-2">
-                            {getProofTypeIcon(submission.proof_type || 'link')}
-                            <a 
-                              href={submission.proof_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-800 underline text-sm"
-                            >
-                              View Proof
-                            </a>
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 text-sm">No proof</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(submission.submission_date)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          submission.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          submission.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {submission.status}
-                        </span>
-                      </td>
-                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    {submission.status === 'submitted' && (
-                <>
-          <button
-        onClick={() =>
-          handleApproveSubmission(submission.id)
-        }
-        className="text-green-600 hover:text-green-900"
-      >
-        Approve
-      </button>
-      <button
-        onClick={() =>
-          handleRejectSubmission(submission.id, 'Please improve and resubmit')
-        }
-        className="text-red-600 hover:text-red-900"
-      >
-        Reject
-      </button>
-    </>
-  )}
-  {submission.status !== 'submitted' && (
-    <span className="text-gray-500">
-      {submission.status === 'approved'
-        ? `${submission.points_awarded} pts awarded`
-        : 'Rejected'}
-    </span>
-  )}
-</td>
+    {/* ✅ WHITE CARD START */}
+    <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+      
+      <div className="p-6 border-b border-gray-200">
+        <h4 className="text-lg font-semibold text-gray-900">
+          All Submissions
+        </h4>
+      </div>
 
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* TABLE */}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campus Mantri</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Task</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submission</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proof</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+          </thead>
 
+          <tbody className="bg-white divide-y divide-gray-200">
+            {taskSubmissions.map((submission) => (
+              <tr key={submission.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4">
+                  <div className="text-sm font-medium text-gray-900">
+                    {submission.campus_mantris?.name}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {submission.campus_mantris?.college_name}
+                  </div>
+                </td>
+
+                <td className="px-6 py-4 text-sm text-gray-900">
+                  {submission.admin_tasks?.title}
+                </td>
+
+                <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                  {submission.submission_text}
+                </td>
+
+                <td className="px-6 py-4">
+                  {submission.proof_url ? (
+                    <a
+                      href={submission.proof_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      View Proof
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 text-sm">No proof</span>
+                  )}
+                </td>
+
+                <td className="px-6 py-4 text-sm text-gray-900">
+                  {formatDate(submission.submission_date)}
+                </td>
+
+                <td className="px-6 py-4">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    submission.status === 'approved'
+                      ? 'bg-green-100 text-green-800'
+                      : submission.status === 'rejected'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {submission.status}
+                  </span>
+                </td>
+
+                <td className="px-6 py-4 text-sm space-x-2">
+                  {submission.status === 'submitted' ? (
+                    <>
+                      <button
+                        onClick={() => handleApproveSubmission(submission.id)}
+                        className="text-green-600 hover:text-green-900"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleRejectSubmission(submission.id, 'Please improve and resubmit')
+                        }
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-gray-500">
+                      {submission.status === 'approved'
+                        ? `${submission.points_awarded} pts awarded`
+                        : 'Rejected'}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ✅ PAGINATION INSIDE CARD */}
+      <div className="flex justify-center items-center gap-4 py-6 border-t">
+        <button
+          onClick={() => setPage(p => Math.max(1, p - 1))}
+          disabled={page === 1}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Prev
+        </button>
+
+        <span className="font-semibold text-gray-700">
+          Page {page} of {Math.ceil(totalSubmissions / PAGE_SIZE)}
+        </span>
+
+        <button
+          onClick={() =>
+            setPage(p =>
+              p < Math.ceil(totalSubmissions / PAGE_SIZE) ? p + 1 : p
+            )
+          }
+          disabled={page >= Math.ceil(totalSubmissions / PAGE_SIZE)}
+          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
+
+    </div>
+    {/* ✅ WHITE CARD END */}
+  </div>
+)}
       {/* Task Form Modal */}
       {showTaskForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
