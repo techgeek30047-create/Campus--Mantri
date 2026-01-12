@@ -58,14 +58,12 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
     setPage(1);
   }
 }, [currentView]);
-
-
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
-  useEffect(() => {
+  fetchDashboardData();
+}, [currentView]);
+useEffect(() => {
   if (currentView === 'submissions') {
-    fetchDashboardData();
+    fetchSubmissions();
   }
 }, [page, currentView]);
 
@@ -73,6 +71,42 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
   useEffect(() => {
     filterMantris();
   }, [searchTerm, collegeFilter, mantris]);
+  const fetchSubmissions = async () => {
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  const { data, count, error } = await supabase
+    .from('task_submissions')
+    .select(
+      `
+      *,
+      admin_tasks (
+        title,
+        description,
+        due_date,
+        priority
+      ),
+      campus_mantris (
+        name,
+        email,
+        college_name,
+        gfg_mantri_id
+      )
+      `,
+      { count: 'exact' }
+    )
+    .order('submitted_at', { ascending: false })
+    .range(from, to);
+
+  if (error) {
+    console.error('Submissions error:', error);
+    return;
+  }
+
+  setTaskSubmissions(data || []);
+  setTotalSubmissions(count || 0);
+};
+
 
   const fetchDashboardData = async () => {
     try {
@@ -114,36 +148,6 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
 
       // Fetch task submissions with proof
       // 🔹 Fetch task submissions (PAGINATED)
-const from = (page - 1) * PAGE_SIZE;
-const to = from + PAGE_SIZE - 1;
-
-const { data: submissionsData, count, error: submissionsError } = await supabase
-  .from('task_submissions')
-  .select(
-    `
-    *,
-    admin_tasks (
-      title,
-      description,
-      due_date,
-      priority
-    ),
-    campus_mantris (
-      name,
-      email,
-      college_name,
-      gfg_mantri_id
-    )
-    `,
-    { count: 'exact' }
-  )
-  .order('submitted_at', { ascending: false })
-  .range(from, to);
-
-if (submissionsError) console.error('Submissions error:', submissionsError);
-
-setTaskSubmissions(submissionsData || []);
-setTotalSubmissions(count || 0);
 
 
       // Fetch leaderboard with simple query first
@@ -177,9 +181,19 @@ setTotalSubmissions(count || 0);
         }
       }
 
-      console.log('Fetched data - mantris:', mantrisData?.length, 'tasks:', tasksData?.length, 'adminTasks:', adminTasksData?.length, 'submissions:', submissionsData?.length, 'leaderboard:', leaderboardData?.length);
+     console.log(
+  'Fetched data - mantris:',
+  mantrisData?.length,
+  'tasks:',
+  tasksData?.length,
+  'adminTasks:',
+  adminTasksData?.length,
+  'leaderboard:',
+  leaderboardData?.length
+);
 
-      if (mantrisData && adminTasksData && submissionsData) {
+if (mantrisData && adminTasksData) {
+
         setMantris(mantrisData || []);
         setTasks(tasksData || []);
         setAdminTasks(adminTasksData);
