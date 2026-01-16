@@ -239,7 +239,7 @@ const allMantris = await fetchAllRows('campus_mantris', 'college_name,status');
 const activeColleges = new Set(
   allMantris
     .filter((m: any) => m.status === 'active')
-    .map((m: any) => normalizeCollege(m.college_name))
+    .map((m: any) => (m.college_name || '').trim())
     .filter(Boolean)
 ).size;
 
