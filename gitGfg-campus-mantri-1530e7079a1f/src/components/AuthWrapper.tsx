@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService, AuthUser } from '../lib/auth';
-import { testSupabaseConnection, supabase } from '../lib/supabase';
+import { testSupabaseConnection, supabase, isSupabaseConfigured } from '../lib/supabase';
 import LoginForm from './LoginForm';
 import RegisterForm from './RegisterForm';
 import CampusMantriPortal from './CampusMantriPortal';
@@ -10,27 +11,34 @@ const AuthWrapper: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(true);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [configMissing, setConfigMissing] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        
         // Test database connection first
         const isConnected = await testSupabaseConnection();
+
+        // If not connected and env vars are missing, show a helpful banner instead of a blocking error
+        if (!isConnected && !isSupabaseConfigured) {
+          setConfigMissing(true);
+          setLoading(false);
+          return;
+        }
+
         if (!isConnected) {
           setConnectionError('Unable to connect to database. Please check your internet connection and try again.');
           setLoading(false);
           return;
         }
-        
-        
+
         // Try to initialize auth from existing session
         const sessionUser = await authService.initializeAuth();
         if (sessionUser) {
           setUser(sessionUser);
-        } else {
         }
-        
+
         setLoading(false);
       } catch (error) {
         console.error('❌ App initialization error:', error);
@@ -38,7 +46,7 @@ const AuthWrapper: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     initializeApp();
   }, []);
 
@@ -71,6 +79,24 @@ const AuthWrapper: React.FC = () => {
           <button onClick={() => window.location.reload()} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
             Retry
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (configMissing) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 max-w-md text-center">
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Supabase Not Configured</h3>
+          <p className="text-yellow-700 mb-4">Missing Supabase environment variables. To fully use the app, create a <code>.env</code> in the project root and add:</p>
+          <pre className="bg-white border rounded p-3 text-left text-sm mb-4">VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key</pre>
+          <div className="flex items-center justify-center space-x-3">
+            <button onClick={() => navigate('/dbtest')} className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors">Run DB Test</button>
+            <button onClick={() => setConfigMissing(false)} className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">Continue (offline)</button>
+            <button onClick={() => window.location.reload()} className="bg-white border text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">Retry</button>
+          </div>
         </div>
       </div>
     );
