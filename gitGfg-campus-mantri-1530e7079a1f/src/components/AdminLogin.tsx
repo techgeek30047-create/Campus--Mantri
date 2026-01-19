@@ -1,8 +1,11 @@
 import { ArrowLeft, Eye, EyeOff, Shield } from 'lucide-react';
 import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
+import bcrypt from 'bcryptjs';
+import AdminRegister from './AdminRegister';
 
 interface AdminLoginProps {
-  onLogin: () => void;
+  onLogin: (admin: any) => void; // will receive Admin object on success
   onBack?: () => void;
 }
 
@@ -14,6 +17,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [registerMode, setRegisterMode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,16 +30,69 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
       setLoading(false);
       return;
     }
-    
-    // Admin authentication with exact credentials
-    if (credentials.username === 'gfg_admin' && credentials.password === 'GFG@2027#Admin2212') {
-      onLogin();
-    } else {
-      setError('Invalid admin credentials');
+
+    try {
+      // Lookup admin in DB
+      const { data: adminData, error: adminErr } = await supabase
+        .from('admins')
+        .select('*')
+        .eq('username', credentials.username.trim())
+        .limit(1)
+        .single();
+
+      if (adminErr || !adminData) {
+        setError('Invalid admin credentials');
+        setLoading(false);
+        return;
+      }
+
+      // Support both plaintext password (legacy) and hashed password (password_hash)
+      const storedHash = adminData.password_hash || adminData.password || null;
+      if (!storedHash) {
+        setError('Invalid admin credentials');
+        setLoading(false);
+        return;
+      }
+
+      let valid = false;
+      try {
+        if (adminData.password_hash) {
+          valid = bcrypt.compareSync(credentials.password, adminData.password_hash);
+        } else {
+          // legacy plaintext fallback
+          valid = adminData.password === credentials.password;
+        }
+      } catch (e) {
+        console.error('Password check error:', e);
+      }
+
+      if (!valid) {
+        setError('Invalid admin credentials');
+        setLoading(false);
+        return;
+      }
+
+      // Record login event
+      try {
+        await supabase.from('admin_logins').insert([{ admin_id: adminData.id }]);
+      } catch (logErr) {
+        console.warn('Failed to record admin login:', logErr);
+      }
+
+      // Call back with admin object
+      onLogin(adminData as any);
+    } catch (err) {
+      console.error('Admin login error:', err);
+      setError('Login failed — check console for details');
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
+
+  // Render switching between Login and Register
+  if (registerMode) {
+    return <AdminRegister onRegistered={(admin) => { onLogin(admin); }} onBack={() => setRegisterMode(false)} />;
+  }
 
   // Handle back navigation
   const handleBack = () => {
@@ -136,10 +193,9 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
           </button>
         </form>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-slate-600 font-medium">
-            🔒 Authorized admin access only
-          </p>
+        <div className="mt-6 text-center flex flex-col gap-3">
+          <button type="button" onClick={() => setRegisterMode(true)} className="text-sm text-emerald-600 hover:underline">Don't have an account? Create one</button>
+          <p className="text-sm text-slate-600 font-medium">🔒 Authorized admin access only</p>
         </div>
       </div>
     </div>
