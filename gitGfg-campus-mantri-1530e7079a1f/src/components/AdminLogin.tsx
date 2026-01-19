@@ -110,16 +110,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         <div className="absolute bottom-10 right-20 w-80 h-80 bg-teal-700/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
       </div>
 
-      {/* Back Button */}
-      {onBack && (
-        <button
-          onClick={handleBack}
-          className="fixed top-6 left-6 bg-white/20 hover:bg-white/30 text-white p-3 rounded-xl transition-all duration-300 flex items-center gap-2 backdrop-blur-sm border border-white/20 font-semibold hover:scale-110 transform"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span className="hidden sm:inline">Back to Portal</span>
-        </button>
-      )}
+  
       
       <div className="relative z-10 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl p-10 w-full max-w-md border border-emerald-200/30 hover:shadow-3xl transition-all duration-500">
         <div className="text-center mb-10">
