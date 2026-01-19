@@ -1,12 +1,15 @@
 import { Archive, Bell, CheckCircle, Clock, Download, FileText, Link, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Upload, Users, Menu, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission } from '../lib/supabase';
+import { AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission, isSupabaseAvailable } from '../lib/supabase';
+
+import { Admin } from '../lib/supabase';
 
 interface AdminDashboardProps {
   onLogout: () => void;
+  currentAdmin?: Admin;
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin }) => {
   const [stats, setStats] = useState({
     totalMantris: 0,
     activeTasks: 0,
@@ -33,10 +36,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [clearingTasks, setClearingTasks] = useState(false);
   const [clearingAnnouncements, setClearingAnnouncements] = useState(false);
   const [recomputingLeaderboard, setRecomputingLeaderboard] = useState(false);
+  // Leaderboard/points state
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [pointsEnabled, setPointsEnabled] = useState<boolean | null>(null);
   // 🔹 Submissions pagination state
 const [page, setPage] = useState(1);
 const PAGE_SIZE = 250;
 const [totalSubmissions, setTotalSubmissions] = useState(0);
+
+  // Admin tracking state
+  const [adminStats, setAdminStats] = useState<Array<{ admin: Admin; approvals: number; last_login?: string | null; logged_in?: boolean }>>([]);
 
 
   // Task form state
@@ -44,7 +53,8 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
     title: '',
     description: '',
     assigned_to: '',
-    due_date: ''
+    due_date: '',
+    points: 0
   });
 
   // Announcement form state
@@ -53,20 +63,32 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
     message: '',
     priority: 'normal' as const
   });
+  // Load all data ONCE on component mount
   useEffect(() => {
-  if (currentView === 'submissions') {
-    setPage(1);
-  }
-}, [currentView]);
-  useEffect(() => {
-  fetchDashboardData();
-}, [currentView]);
-useEffect(() => {
-  if (currentView === 'submissions') {
-    fetchSubmissions();
-  }
-}, [page, currentView]);
+    fetchDashboardData();
+    fetchAdminStats();
+  }, []);
 
+  // Reset page when switching to submissions view
+  useEffect(() => {
+    if (currentView === 'submissions') {
+      setPage(1);
+    }
+  }, [currentView]);
+
+  // Fetch submissions only when page or view changes
+  useEffect(() => {
+    if (currentView === 'submissions') {
+      fetchSubmissions();
+    }
+  }, [page, currentView]);
+
+  // Fetch leaderboard data when switching to leaderboard view
+  useEffect(() => {
+    if (currentView === 'leaderboard') {
+      fetchDashboardData();
+    }
+  }, [currentView]);
 
   useEffect(() => {
     filterMantris();
@@ -75,18 +97,22 @@ useEffect(() => {
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
-  const { data, count, error } = await supabase
+  // First, try fetching submissions with nested admin_tasks including points
+  let res = await supabase
     .from('task_submissions')
     .select(
       `
       *,
       admin_tasks (
+        id,
         title,
         description,
         due_date,
-        priority
+        priority,
+        points
       ),
       campus_mantris (
+        id,
         name,
         email,
         college_name,
@@ -97,6 +123,18 @@ useEffect(() => {
     )
     .order('submitted_at', { ascending: false })
     .range(from, to);
+
+  // If the nested select failed (for example older DBs missing columns), retry with a simpler select that omits the nested admin_tasks entirely
+  if (res.error) {
+    console.warn('Submissions query failed with nested admin_tasks; retrying without nested admin_tasks select:', res.error);
+    res = await supabase
+      .from('task_submissions')
+      .select(`*, campus_mantris (id, name, email, college_name, gfg_mantri_id)`, { count: 'exact' })
+      .order('submitted_at', { ascending: false })
+      .range(from, to);
+  }
+
+  const { data, count, error } = res;
 
   if (error) {
     console.error('Submissions error:', error);
@@ -111,6 +149,8 @@ useEffect(() => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      // Ensure leaderboard variable is always in scope to avoid ReferenceError
+      let fetchedLeaderboard: any[] | null | undefined = undefined;
       
       // Fetch campus mantris
       const { data: mantrisData, error: mantrisError } = await supabase
@@ -150,34 +190,76 @@ useEffect(() => {
       // 🔹 Fetch task submissions (PAGINATED)
 
 
-      // Fetch leaderboard with simple query first
-      const { data: leaderboardData, error: leaderboardError } = await supabase
-        .from('leaderboard')
-        .select('*')
-        .gt('tasks_completed', 0)
-        .order('tasks_completed', { ascending: false });
+      // Only fetch leaderboard if the leaderboard view is active (improves responsiveness)
+      if (currentView === 'leaderboard') {
+        fetchedLeaderboard = null;
+        try {
+          setLeaderboardLoading(true);
 
-      if (leaderboardError) {
-        console.error('Leaderboard error:', leaderboardError);
-      } else {
-        console.log('Leaderboard fetched successfully:', leaderboardData?.length, 'entries');
-        // Now enrich with campus_mantris data
-        if (leaderboardData && leaderboardData.length > 0) {
-          const enrichedData = await Promise.all(
-            leaderboardData.map(async (entry) => {
-              const { data: mantri } = await supabase
-                .from('campus_mantris')
-                .select('name, college_name, gfg_mantri_id')
-                .eq('id', entry.mantri_id)
-                .single();
-              return {
-                ...entry,
-                campus_mantris: mantri
-              };
-            })
-          );
-          leaderboardData.length = 0;
-          leaderboardData.push(...enrichedData);
+          // Try ordering by points (preferred) - limit to top 100 for performance
+          const { data: lbByPoints, error: lbPointsErr } = await supabase
+            .from('leaderboard')
+            .select('*')
+            .gt('tasks_completed', 0)
+            .order('total_points', { ascending: false })
+            .limit(100);
+
+          if (!lbPointsErr) {
+            fetchedLeaderboard = lbByPoints || [];
+            setPointsEnabled(true);
+            console.log('Leaderboard fetched (points ordering):', fetchedLeaderboard.length);
+          } else {
+            // If total_points column doesn't exist, fallback to ordering by tasks_completed
+            const msg = String(lbPointsErr?.message || '').toLowerCase();
+            const code = lbPointsErr?.code || '';
+
+            if (code === '42703' || msg.includes('total_points')) {
+              console.warn('total_points column missing; falling back to tasks ordering');
+              const { data: lbByTasks, error: lbTasksErr } = await supabase
+                .from('leaderboard')
+                .select('*')
+                .gt('tasks_completed', 0)
+                .order('tasks_completed', { ascending: false })
+                .limit(100);
+
+              if (!lbTasksErr) {
+                fetchedLeaderboard = lbByTasks || [];
+                setPointsEnabled(false);
+                console.log('Leaderboard fetched (tasks ordering):', fetchedLeaderboard.length);
+              } else {
+                console.error('Leaderboard fallback error:', lbTasksErr);
+              }
+            } else {
+              console.error('Leaderboard error:', lbPointsErr);
+            }
+          }
+
+          // Enrich with mantri details if we have results (batch fetch for performance)
+          if (fetchedLeaderboard && fetchedLeaderboard.length > 0) {
+            const mantriIds = Array.from(new Set(fetchedLeaderboard.map((e: any) => e.mantri_id).filter(Boolean)));
+            const { data: mantrisMap } = await supabase
+              .from('campus_mantris')
+              .select('id, name, college_name, gfg_mantri_id')
+              .in('id', mantriIds)
+              .limit(1000);
+
+            const mantriById: Record<string, any> = {};
+            (mantrisMap || []).forEach((m: any) => { mantriById[m.id] = m; });
+
+            const enrichedData = fetchedLeaderboard.map((entry: any) => ({
+              ...entry,
+              campus_mantris: mantriById[entry.mantri_id] || null
+            }));
+
+            setLeaderboard(enrichedData);
+          } else {
+            setLeaderboard([]);
+          }
+        } catch (err) {
+          console.error('Error fetching leaderboard:', err);
+          setLeaderboard([]);
+        } finally {
+          setLeaderboardLoading(false);
         }
       }
 
@@ -189,40 +271,42 @@ useEffect(() => {
   'adminTasks:',
   adminTasksData?.length,
   'leaderboard:',
-  leaderboardData?.length
+  fetchedLeaderboard?.length
 );
 
-if (mantrisData && adminTasksData) {
+// Set whatever data we have (don't require all queries to succeed)
+setMantris(mantrisData || []);
+setTasks(tasksData || []);
+setAdminTasks(adminTasksData || []);
 
-        setMantris(mantrisData || []);
-        setTasks(tasksData || []);
-        setAdminTasks(adminTasksData);
-        setLeaderboard(leaderboardData || []);
+// NOTE: leaderboard is already set via setLeaderboard() in the enrichment logic above
+// Do NOT overwrite it here, as it contains the enriched mantri details
+// Only set leaderboard to empty if it wasn't fetched at all
+if (currentView !== 'leaderboard' && (!fetchedLeaderboard || fetchedLeaderboard.length === 0)) {
+  setLeaderboard([]);
+}
 
-        // Fetch exact total count (Supabase returns a 1,000 row cap by default)
-        const { count: exactCount } = await supabase
-          .from('campus_mantris')
-          .select('*', { count: 'exact', head: true });
+// Fetch exact total count (Supabase returns a 1,000 row cap by default)
+const { count: exactCount } = await supabase
+  .from('campus_mantris')
+  .select('*', { count: 'exact', head: true });
 
-        const totalMantrisCount = typeof exactCount === 'number' ? exactCount : (mantrisData.length || 0);
+const totalMantrisCount = typeof exactCount === 'number' ? exactCount : ((mantrisData && mantrisData.length) || 0);
 
-        // Calculate comprehensive stats
-        const activeTasks = adminTasksData.filter(task => task.status === 'active').length;
-        const completedTasks = (tasksData || []).filter(task => task.status === 'completed').length;
-        const { count: pendingCount, error: pendingError } = await supabase
+// Calculate comprehensive stats (use safe fallbacks)
+const activeTasks = (adminTasksData || []).filter(task => task.status === 'active').length;
+const completedTasks = (tasksData || []).filter(task => task.status === 'completed').length;
+const { count: pendingCount, error: pendingError } = await supabase
   .from('task_submissions')
   .select('*', { count: 'exact', head: true })
   .eq('status', 'submitted');
 
 const pendingSubmissions = pendingCount ?? 0;
 
-       const { data: allApprovedSubs } = await supabase
-  .from('task_submissions')
-  .select('points_awarded')
-  .eq('status', 'approved');
-
+// Sum approved submission points using paged fetch to avoid 1000-row cap
+const allApprovedSubsPaged = await fetchAllRows('task_submissions', 'points_awarded');
 const totalPointsAwarded =
-  allApprovedSubs?.reduce((sum, s) => sum + (s.points_awarded || 0), 0) || 0;
+  (allApprovedSubsPaged || []).reduce((sum: number, s: any) => sum + (s.points_awarded || 0), 0);
 
 
 // Fetch ALL campus mantris (no 1000 limit)
@@ -247,7 +331,7 @@ setStats({
   activeColleges
 });
 
-      }
+// Admin stats fetched on mount via useEffect above
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -258,14 +342,22 @@ setStats({
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const taskData: any = {
+        title: taskFormData.title,
+        description: taskFormData.description,
+        assigned_to: taskFormData.assigned_to || null,
+        due_date: taskFormData.due_date,
+        status: 'active'
+      };
+
+      // Add points only if provided (schema may not have it in old DBs)
+      if (taskFormData.points) {
+        taskData.points = Number(taskFormData.points || 0);
+      }
+
       const { error } = await supabase
         .from('admin_tasks')
-        .insert([{
-          title: taskFormData.title,
-          description: taskFormData.description,
-          assigned_to: taskFormData.assigned_to || null,
-          due_date: taskFormData.due_date
-        }]);
+        .insert([taskData]);
 
       if (error) throw error;
 
@@ -273,12 +365,14 @@ setStats({
         title: '',
         description: '',
         assigned_to: '',
-        due_date: ''
+        due_date: '',
+        points: 0
       });
       setShowTaskForm(false);
       fetchDashboardData();
     } catch (error) {
       console.error('Error creating task:', error);
+      alert('Failed to create task. Ensure all fields are filled correctly.');
     }
   };
 
@@ -305,29 +399,50 @@ setStats({
 
  //Approval task with points backend //
  const handleApproveSubmission = async (submissionId: string) => {
+  // Find submission to determine points
+  const submission = taskSubmissions.find(s => s.id === submissionId);
+  const points = submission?.admin_tasks?.points ?? submission?.points_awarded ?? 0;
+
   // ✅ 1. OPTIMISTIC UI UPDATE (instant approve feel)
   setTaskSubmissions(prev =>
     prev.map(sub =>
       sub.id === submissionId
-        ? { ...sub, status: 'approved' }
+        ? { ...sub, status: 'approved', points_awarded: points }
         : sub
     )
   );
 
   try {
-    // ✅ 2. Backend RPC (background me chalega)
+    // ✅ 2. Backend RPC (background me chalega) — include approver
     const { error } = await supabase.rpc('approve_submission', {
-      submission_id: submissionId
+      submission_id: submissionId,
+      points_value: points,
+      approver_id: currentAdmin?.id ?? null
     });
 
     if (error) {
       console.error('Approve failed:', error);
       // rollback only if backend fails
       fetchDashboardData();
+    } else {
+      // ✅ 3. Refresh leaderboard if it's currently being viewed
+      if (currentView === 'leaderboard') {
+        // Small delay to ensure DB has synced
+        setTimeout(() => {
+          fetchDashboardData();
+        }, 500);
+      }
     }
   } catch (err) {
     console.error('Approve error:', err);
-    fetchDashboardData();
+    // Rollback on error
+    setTaskSubmissions(prev =>
+      prev.map(sub =>
+        sub.id === submissionId
+          ? { ...sub, status: 'submitted' }
+          : sub
+      )
+    );
   }
 };
 
@@ -346,19 +461,24 @@ setStats({
   );
 
   try {
-    // ✅ 2. Backend update (background me)
-    const { error } = await supabase
-      .from('task_submissions')
-      .update({
-        status: 'rejected',
-        admin_feedback: feedback || 'Task needs improvement. Please resubmit.'
-      })
-      .eq('id', submissionId);
+    // ✅ 2. Backend update using the update_submission_status function for leaderboard sync
+    const { error } = await supabase.rpc('update_submission_status', {
+      submission_id: submissionId,
+      new_status: 'rejected',
+      approver_id: currentAdmin?.id ?? null
+    });
 
     if (error) {
       console.error('Reject failed:', error);
       // rollback only if backend fails
       fetchDashboardData();
+    } else {
+      // ✅ 3. Refresh leaderboard if it's currently being viewed
+      if (currentView === 'leaderboard') {
+        setTimeout(() => {
+          fetchDashboardData();
+        }, 500);
+      }
     }
   } catch (err) {
     console.error('Reject error:', err);
@@ -442,6 +562,31 @@ setStats({
     return results;
   };
 
+  const fetchAdminStats = async () => {
+    try {
+      const { data: adminsData } = await supabase.from('admins').select('*').order('created_at', { ascending: false });
+      const approvals = await fetchAllRows('admin_approvals', '*');
+      const { data: loginsData } = await supabase.from('admin_logins').select('*').order('logged_in_at', { ascending: false });
+
+      const approvalsMap: Record<string, number> = {};
+      (approvals || []).forEach((a: any) => { approvalsMap[a.admin_id] = (approvalsMap[a.admin_id] || 0) + 1; });
+
+      const lastLoginMap: Record<string, string> = {};
+      (loginsData || []).forEach((l: any) => { if (!lastLoginMap[l.admin_id]) lastLoginMap[l.admin_id] = l.logged_in_at; });
+
+      const list = (adminsData || []).map((ad: any) => ({
+        admin: ad,
+        approvals: approvalsMap[ad.id] || 0,
+        last_login: lastLoginMap[ad.id] || null,
+        logged_in: currentAdmin?.id === ad.id
+      }));
+
+      setAdminStats(list);
+    } catch (err) {
+      console.error('Error fetching admin stats:', err);
+    }
+  };
+
   const filterMantris = () => {
     // Defensive filtering that tolerates missing fields
     let filtered = mantris || [];
@@ -466,7 +611,7 @@ setStats({
   };
 
   const getUniqueColleges = () => {
-    const colleges = mantris.map(mantri => mantri.college_name);
+    const colleges = mantris.map(mantri => mantri.college_name).filter(Boolean);
     return [...new Set(colleges)].sort();
   };
 //proof section//
@@ -515,9 +660,14 @@ setStats({
       };
     });
 
+    const quote = (v: any) => {
+      const s = String(v ?? '');
+      return `"${s.replace(/"/g, '""')}"`;
+    };
+
     const csvContent = [
-      Object.keys(csvData[0]).join(','),
-      ...csvData.map(row => Object.values(row).join(','))
+      Object.keys(csvData[0]).map(quote).join(','),
+      ...csvData.map(row => Object.values(row).map(quote).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -650,6 +800,13 @@ setStats({
     )}
 
       <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {!isSupabaseAvailable() && (
+          <div className="max-w-7xl mx-auto mb-4">
+            <div className="p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800">
+              <strong>Warning:</strong> Supabase is not configured. Data will not be fetched. Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in a local <code>.env</code> and restart the dev server.
+            </div>
+          </div>
+        )} 
         {/* Navigation Tabs */}
         <div className="flex space-x-2 bg-slate-800/50 backdrop-blur-sm p-2 rounded-xl border border-slate-700 w-fit">
           {[
@@ -705,6 +862,40 @@ setStats({
                 );
               })}
             </div>
+
+            {/* Admin activity panel (visible to super admins) */}
+            {currentAdmin?.is_super && (
+              <div className="mt-6 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-white font-bold">Admin Activity</h3>
+                  <div className="text-slate-300 text-sm">Showing login & approvals counts for all admins</div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="text-slate-400">
+                        <th className="py-2 px-3">Admin</th>
+                        <th className="py-2 px-3">Approvals</th>
+                        <th className="py-2 px-3">Last Login</th>
+                        <th className="py-2 px-3">Logged In</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {adminStats.map((row) => (
+                        <tr key={row.admin.id} className="border-t border-slate-700/40">
+                          <td className="py-3 px-3 text-white font-semibold">{row.admin.name} <span className="text-slate-400 text-xs ml-2">({row.admin.username})</span></td>
+                          <td className="py-3 px-3 text-slate-200">{row.approvals}</td>
+                          <td className="py-3 px-3 text-slate-200">{row.last_login ? new Date(row.last_login).toLocaleString() : '—'}</td>
+                          <td className="py-3 px-3">{row.logged_in ? <span className="text-green-400 font-bold">Yes</span> : <span className="text-slate-400">No</span>}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+            )}
           </>
         )}
 
@@ -743,6 +934,7 @@ setStats({
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Task</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Assigned To</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Due Date</th>
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Points</th>
                     <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
@@ -760,6 +952,9 @@ setStats({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
                         {formatDate(task.due_date)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
+                        {task.points ?? 0}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-lg ${
@@ -787,12 +982,40 @@ setStats({
               <Trophy className="h-8 w-8 text-yellow-500 mr-3" />
               Campus Mantri Leaderboard
             </h3>
+            {leaderboardLoading && (
+              <div className="ml-4 text-sm text-gray-500 flex items-center">
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" /> Loading leaderboard...
+              </div>
+            )}
           </div>
+
+          {/* Points system note */}
+          {pointsEnabled === false && (
+            <div className="mt-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong>Points system not enabled.</strong>
+                  <div className="text-sm">Leaderboard is ranked by tasks completed. Run the points migration to enable points and ranking by total points.</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      // Show README or open migration file in editor — best-effort fallback
+                      window.open('/supabase/migrations/20260114120000_reinstate_points_system.sql', '_blank');
+                    }}
+                    className="bg-yellow-600 text-white px-3 py-1 rounded-lg hover:bg-yellow-700"
+                  >
+                    View Migration
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-yellow-50 to-orange-50">
               <h4 className="text-lg font-semibold text-gray-900">Top Performers</h4>
-                <p className="text-gray-600">Campus Mantris ranked by tasks completed</p>
+                <p className="text-gray-600">Campus Mantris ranked by points (primary) then tasks completed</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -800,6 +1023,7 @@ setStats({
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Campus Mantri</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">College</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Points</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -813,6 +1037,9 @@ setStats({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {entry.campus_mantris?.college_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {entry.total_points ?? 0}
                       </td>
                     </tr>
                   ))}
@@ -1024,6 +1251,18 @@ setStats({
                   value={taskFormData.due_date}
                   onChange={(e) => setTaskFormData({...taskFormData, due_date: e.target.value})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Points</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={taskFormData.points}
+                  onChange={(e) => setTaskFormData({...taskFormData, points: Number(e.target.value) || 0})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Points awarded for completing this task"
                 />
               </div>
 
