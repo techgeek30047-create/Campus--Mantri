@@ -1,15 +1,15 @@
-import { ArrowLeft, Eye, EyeOff, Shield } from 'lucide-react';
+import { Eye, EyeOff, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import bcrypt from 'bcryptjs';
 import AdminRegister from './AdminRegister';
 
 interface AdminLoginProps {
-  onLogin: (admin: any) => void; // will receive Admin object on success
-  onBack?: () => void;
+  onLogin: (admin: any) => void;
 }
 
-const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
+
+const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
@@ -95,13 +95,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
   }
 
   // Handle back navigation
-  const handleBack = () => {
-    if (onBack) {
-      onBack();
-      // Clear admin hash and return to portal
-      window.history.pushState({}, '', '/');
-    }
-  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated background elements */}
