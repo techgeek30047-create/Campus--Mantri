@@ -1099,9 +1099,14 @@ setStats({
                   {submission.admin_tasks?.title}
                 </td>
 
-                <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                  {submission.submission_text}
-                </td>
+<td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+  <div
+    className="truncate cursor-pointer"
+    title={submission.submission_text}
+  >
+    {submission.submission_text}
+  </div>
+</td>
 
                 <td className="px-6 py-4">
                   {submission.proof_url ? (
