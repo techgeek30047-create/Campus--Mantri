@@ -681,23 +681,7 @@ setStats({
 
  // 🔒 SPECIAL ADMIN TASK FILTER (BUILD SAFE)
 
-const SPECIAL_TASK_TITLE = "GfG 60 Day POTD Awareness";
 
-// Get submissions of special task safely
-const specialTaskSubmissions = taskSubmissions.filter((sub: any) => {
-  return sub?.admin_tasks?.title === SPECIAL_TASK_TITLE;
-});
-
-// Check if all approved
-const allSpecialApproved =
-  specialTaskSubmissions.length > 0 &&
-  specialTaskSubmissions.every((sub: any) => sub.status === "approved");
-
-// Final tasks to show in admin panel
-const tasksToShow =
-  !allSpecialApproved
-    ? adminTasks.filter(task => task.title === SPECIAL_TASK_TITLE)
-    : adminTasks;
 
   const statCards = [
     { title: 'Total Campus Mantris', value: stats.totalMantris, icon: Users, color: 'bg-blue-500', change: '+12%' },
@@ -959,7 +943,8 @@ const tasksToShow =
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-600">
-                 {tasksToShow.map((task) => (
+                {adminTasks.map((task) => (
+
 
                     <tr key={task.id} className="hover:bg-slate-700/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
