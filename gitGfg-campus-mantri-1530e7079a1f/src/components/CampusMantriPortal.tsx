@@ -16,12 +16,8 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
   const [announcements, setAnnouncements] = useState<AdminAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
   const [submissionLoading, setSubmissionLoading] = useState<string | null>(null);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [userLeaderboardData, setUserLeaderboardData] = useState<any>(null);
   const [totalPoints, setTotalPoints] = useState<number>(0);
   const [approvedCount, setApprovedCount] = useState<number>(0);
-  const [topFive, setTopFive] = useState<any[]>([]);
-  const [showTopFiveModal, setShowTopFiveModal] = useState(false);
 
   // Form states
   const [selectedTask, setSelectedTask] = useState<string>('');
@@ -174,188 +170,18 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
         setAnnouncements(announcementsData || []);
       }
 
-      // Fetch leaderboard entries (no nested selects to avoid schema relationship issues)
-      try {
-        // Try selecting with total_points first; if the column is missing, retry without it
-        let lbRes: any = await supabase
-          .from('leaderboard')
-          .select('mantri_id, tasks_completed, rank_position, total_points')
-          .order('tasks_completed', { ascending: false })
-          .limit(10);
-
-        if (lbRes.error) {
-          const msg = String(lbRes.error.message || '').toLowerCase();
-          const code = lbRes.error.code || '';
-          if (code === '42703' || msg.includes('total_points')) {
-            console.warn('total_points column missing; retrying leaderboard select without total_points:', lbRes.error);
-            lbRes = await supabase
-              .from('leaderboard')
-              .select('mantri_id, tasks_completed, rank_position')
-              .order('tasks_completed', { ascending: false })
-              .limit(10);
-          } else {
-            console.warn('⚠️ Could not fetch leaderboard (initial):', lbRes.error);
-            setLeaderboard([]);
-            lbRes = null;
-          }
         }
-
-        if (lbRes && !lbRes.error) {
-          const rows = lbRes.data || [];
-          // Batch fetch mantri details for enrichment
-          const mantriIds = Array.from(new Set(rows.map((r: any) => r.mantri_id).filter(Boolean)));
-          let mantriMap: Record<string, any> = {};
-          if (mantriIds.length > 0) {
-            try {
-              const { data: mantris } = await supabase
-                .from('campus_mantris')
-                .select('id, name, college_name')
-                .in('id', mantriIds)
-                .limit(1000);
-              mantriMap = (mantris || []).reduce((acc: any, m: any) => { acc[m.id] = m; return acc; }, {});
-            } catch (err) {
-              console.warn('⚠️ Could not fetch campus mantri details for leaderboard enrichment:', err);
-            }
-          }
-
-          const enriched = rows.map((r: any) => ({
-            ...r,
-            campus_mantris: mantriMap[r.mantri_id] || null
-          }));
-
-          setLeaderboard(enriched);
-        }
-      } catch (err) {
-        console.warn('⚠️ Unexpected error fetching leaderboard:', err);
-        setLeaderboard([]);
-      }
-
-      // Fetch top 5 by total_points first, fallback to tasks_completed. Enrich with mantri details and calculated points.
-      try {
-        let topData: any[] = [];
-
-        const tryQuery = async (orderBy: string) => {
-          // try selecting total_points column first, but fallback to a safer select if the column is missing
-          let res: any = await supabase
-            .from('leaderboard')
-            .select('mantri_id, tasks_completed, rank_position, total_points')
-            .order(orderBy, { ascending: false })
-            .limit(5);
-
-          if (res.error) {
-            const msg = String(res.error.message || '').toLowerCase();
-            const code = res.error.code || '';
-            if (code === '42703' || msg.includes('total_points')) {
-              console.warn('total_points column missing for top-5; retrying without it:', res.error);
-              res = await supabase
-                .from('leaderboard')
-                .select('mantri_id, tasks_completed, rank_position')
-                .order(orderBy, { ascending: false })
-                .limit(5);
-            }
-          }
-
-          return { data: res.data, error: res.error };
-        };
-
-        // Prefer ordering by total_points, but if it fails, fall back to tasks_completed
-        const { data: tByPoints, error: tPointsErr } = await tryQuery('total_points');
-        if (!tPointsErr && tByPoints && tByPoints.length > 0) topData = tByPoints;
-        else {
-          const { data: tByTasks, error: tTasksErr } = await tryQuery('tasks_completed');
-          if (!tTasksErr && tByTasks) topData = tByTasks;
-        }
-
-        // Enrich with mantri details
-        const mantriIdsTop = Array.from(new Set((topData || []).map((r: any) => r.mantri_id).filter(Boolean)));
-        let mantriMapTop: Record<string, any> = {};
-        let pointsMapTop: Record<string, number> = {};
-        
-        if (mantriIdsTop.length > 0) {
-          try {
-            const { data: mantrisTop } = await supabase
-              .from('campus_mantris')
-              .select('id, name, college_name')
-              .in('id', mantriIdsTop)
-              .limit(1000);
-            mantriMapTop = (mantrisTop || []).reduce((acc: any, m: any) => { acc[m.id] = m; return acc; }, {});
-          } catch (err) {
-            console.warn('⚠️ Could not fetch campus mantri details for top 5 enrichment:', err);
-          }
-
-          // Fetch actual calculated points for each top mantri from their submissions
-          try {
-            const { data: topSubmissions } = await supabase
-              .from('task_submissions')
-              .select('mantri_id, points_awarded')
-              .in('mantri_id', mantriIdsTop)
-              .eq('status', 'approved');
-            
-            if (topSubmissions) {
-              pointsMapTop = mantriIdsTop.reduce((acc: any, id: any) => {
-                acc[id] = topSubmissions
-                  .filter((s: any) => s.mantri_id === id)
-                  .reduce((sum: number, s: any) => sum + (Number(s.points_awarded ?? 0) || 0), 0);
-                return acc;
-              }, {});
-            }
-          } catch (err) {
-            console.warn('⚠️ Could not fetch submission points for top 5:', err);
-          }
-        }
-
-        const enrichedTop = (topData || []).map((r: any) => ({ 
-          ...r, 
-          campus_mantris: mantriMapTop[r.mantri_id] || null,
-          calculated_points: pointsMapTop[r.mantri_id] ?? (r.total_points ?? r.tasks_completed ?? 0)
-        }));
-        setTopFive(enrichedTop);
-      } catch (err) {
-        console.warn('⚠️ Could not fetch top 5 leaderboard:', err);
-        setTopFive([]);
-      }
-
-      // Fetch user's leaderboard data (try to include total_points but fall back on available fields)
-      if (currentMantri?.id) {
-        try {
-          const { data: userLeaderboard, error: userLeaderboardError } = await supabase
-            .from('leaderboard')
-            .select('tasks_completed, rank_position, total_points')
-            .eq('mantri_id', currentMantri.id)
-            .maybeSingle();
-
-          if (userLeaderboardError) {
-            // Try a simpler select
-            console.warn('Could not fetch user leaderboard data with points:', userLeaderboardError.message);
-            const { data: simpler, error: simplerErr } = await supabase
-              .from('leaderboard')
-              .select('tasks_completed, rank_position')
-              .eq('mantri_id', currentMantri.id)
-              .maybeSingle();
-
-            if (simplerErr) {
-              console.warn('Could not fetch user leaderboard data (fallback):', simplerErr.message);
-              setUserLeaderboardData(null);
-            } else {
-              setUserLeaderboardData(simpler);
-            }
-          } else {
-            setUserLeaderboardData(userLeaderboard);
-          }
-        } catch (err) {
-          console.warn('Could not fetch user leaderboard data:', err);
-          setUserLeaderboardData(null);
-        }
-      }
-
-
-    } catch (error) {
+            catch (error) {
       console.error('Error fetching data:', error);
-      setLoading(false);
     } finally {
       setLoading(false);
     }
   };
+
+   
+
+    
+     
 
   const handleSubmitTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -440,15 +266,7 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
     }
   };
 
-  const getCurrentRank = () => {
-    if (!campusMantri?.name) return null;
-    const userEntry = leaderboard.find(entry => 
-      entry.campus_mantris?.name === campusMantri.name
-    );
-    return userEntry?.rank_position || leaderboard.findIndex(entry => 
-      entry.campus_mantris?.name === campusMantri.name
-    ) + 1 || null;
-  };
+ 
 
   const getTaskDisplayName = (title: string) => {
     const match = title.match(/^(Task \d+)/i);
@@ -545,34 +363,18 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
                 <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 text-center border border-emerald-200/50 shadow-md min-w-[220px]">
                   <div className="flex items-center justify-center gap-2 mb-2">
                     <CheckCircle className="h-10 w-10 text-emerald-600" />
-                    <span className="text-4xl font-bold text-gray-900">{userLeaderboardData?.tasks_completed || 0}</span>
+                    <span className="text-4xl font-bold text-gray-900">{approvedCount}</span>
                   </div>
                   <p className="text-emerald-700 font-semibold text-lg">Tasks Completed</p>
                 </div>
 
                 {/* Small Points & Top-5 Leaderboard Card */}
-                <div className="bg-white/90 rounded-2xl p-4 border border-emerald-100 shadow-md w-[340px]">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="text-sm text-gray-600 font-medium">Total Points</p>
-                      <p className="text-2xl font-bold text-gray-900">{totalPoints}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500">Your Rank</p>
-                      <p className="text-lg font-semibold text-emerald-700">{userLeaderboardData?.rank_position || 'N/A'}</p>
-                    </div>
-                  </div>
+                <div className="bg-white/90 rounded-2xl p-4 border border-emerald-100 shadow-md w-[220px]">
+  <p className="text-sm text-gray-600 font-medium">Total Points</p>
+  <p className="text-2xl font-bold text-gray-900">{totalPoints}</p>
+</div>
 
-                  <div className="border-t pt-3 mt-3">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-600">See who's on top</p>
-                      <button
-                        onClick={() => setShowTopFiveModal(true)}
-                        className="text-sm font-semibold text-emerald-700 hover:underline"
-                      >
-                        View Top 5 →
-                      </button>
-                    </div>
+                    
                   </div>
                 </div>
               </div>
@@ -676,7 +478,7 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Task Submission Description <span className="text-red-500">*</span>
+                    Summarize What you Have Done <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={submissionText}
@@ -903,44 +705,7 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
 
 
       {/* Top 5 Leaderboard Modal */}
-      {showTopFiveModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 relative">
-            <button
-              onClick={() => setShowTopFiveModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <h3 className="text-xl font-bold mb-4">Top 5 Campus Mantris</h3>
-            <div className="space-y-3">
-              {topFive.length === 0 && (
-                <div className="text-sm text-gray-500">No leaderboard data available.</div>
-              )}
-              {topFive.map((entry: any, idx: number) => {
-                const name = entry.campus_mantris?.name || 'Unknown';
-                const college = entry.campus_mantris?.college_name || '';
-                const pts = entry.calculated_points ?? entry.total_points ?? entry.tasks_completed ?? 0;
-                const rankPos = entry.rank_position ?? (idx + 1);
-                const isYou = entry.mantri_id === (campusMantri?.id);
-                return (
-                  <div key={entry.mantri_id} className={`flex items-center justify-between p-3 rounded-lg ${isYou ? 'bg-emerald-50' : 'bg-gray-50'}`}>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center font-semibold text-emerald-700">#{rankPos}</div>
-                      <div>
-                        <div className={`font-medium ${isYou ? 'text-emerald-700' : 'text-gray-900'}`}>{name}</div>
-                        {college && <div className="text-xs text-gray-500">{college}</div>}
-                      </div>
-                    </div>
-                    <div className="text-sm font-bold text-gray-800">{pts} pts</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+     
 
       <Footer />
     </div>
