@@ -257,17 +257,6 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
 
   // Priority/points helpers removed — system now tracks only tasks_completed.
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'rejected': return 'bg-red-100 text-red-800 border-red-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
- 
-
   const getTaskDisplayName = (title: string) => {
     const match = title.match(/^(Task \d+)/i);
     return match ? match[1] : title;
@@ -370,12 +359,8 @@ const TaskSubmitter: React.FC<TaskSubmitterProps> = ({ user, onLogout }) => {
 
                 {/* Small Points & Top-5 Leaderboard Card */}
                 <div className="bg-white/90 rounded-2xl p-4 border border-emerald-100 shadow-md w-[220px]">
-  <p className="text-sm text-gray-600 font-medium">Total Points</p>
-  <p className="text-2xl font-bold text-gray-900">{totalPoints}</p>
-</div>
-
-                    
-                  </div>
+                  <p className="text-sm text-gray-600 font-medium">Total Points</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalPoints}</p>
                 </div>
               </div>
             </div>
