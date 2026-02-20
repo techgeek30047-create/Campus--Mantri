@@ -679,10 +679,6 @@ setStats({
     window.URL.revokeObjectURL(url);
   };
 
- // 🔒 SPECIAL ADMIN TASK FILTER (BUILD SAFE)
-
-
-
   const statCards = [
     { title: 'Total Campus Mantris', value: stats.totalMantris, icon: Users, color: 'bg-blue-500', change: '+12%' },
     { title: 'Active Admin Tasks', value: stats.activeTasks, icon: Target, color: 'bg-purple-500', change: '+8%' },
@@ -943,9 +939,7 @@ setStats({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-600">
-                {adminTasks.map((task) => (
-
-
+                  {adminTasks.map((task) => (
                     <tr key={task.id} className="hover:bg-slate-700/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
@@ -1091,7 +1085,6 @@ setStats({
 
           <tbody className="bg-white divide-y divide-gray-200">
             {taskSubmissions.map((submission) => (
-
               <tr key={submission.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
                   <div className="text-sm font-medium text-gray-900">
@@ -1106,14 +1099,9 @@ setStats({
                   {submission.admin_tasks?.title}
                 </td>
 
-<td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
-  <div
-    className="truncate cursor-pointer"
-    title={submission.submission_text}
-  >
-    {submission.submission_text}
-  </div>
-</td>
+                <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                  {submission.submission_text}
+                </td>
 
                 <td className="px-6 py-4">
                   {submission.proof_url ? (
