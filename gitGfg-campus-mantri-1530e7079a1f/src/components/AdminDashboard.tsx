@@ -1090,11 +1090,7 @@ setStats({
           </thead>
 
           <tbody className="bg-white divide-y divide-gray-200">
-            {taskSubmissions
-  .filter((submission: any) =>
-    submission?.admin_tasks?.title?.includes("GfG 60 Day POTD Awareness")
-  )
-  .map((submission) => (
+            {taskSubmissions.map((submission) => (
 
               <tr key={submission.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
