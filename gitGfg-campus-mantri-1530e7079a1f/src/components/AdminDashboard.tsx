@@ -39,6 +39,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
   // Leaderboard/points state
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [pointsEnabled, setPointsEnabled] = useState<boolean | null>(null);
+  // Task filter state for submissions
+  const [selectedTaskFilter, setSelectedTaskFilter] = useState<string>('');
   // 🔹 Submissions pagination state
 const [page, setPage] = useState(1);
 const PAGE_SIZE = 250;
@@ -69,10 +71,11 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
     fetchAdminStats();
   }, []);
 
-  // Reset page when switching to submissions view
+  // Reset page and filter when switching to submissions view
   useEffect(() => {
     if (currentView === 'submissions') {
       setPage(1);
+      setSelectedTaskFilter('');
     }
   }, [currentView]);
 
@@ -1063,9 +1066,37 @@ setStats({
     <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
       
       <div className="p-6 border-b border-gray-200">
-        <h4 className="text-lg font-semibold text-gray-900">
-          All Submissions
-        </h4>
+        <div className="flex justify-between items-center">
+          <h4 className="text-lg font-semibold text-gray-900">
+            All Submissions
+          </h4>
+          <div className="w-64">
+            <select
+              value={selectedTaskFilter}
+              onChange={(e) => {
+                setSelectedTaskFilter(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="">All Tasks</option>
+              {Array.from(
+                new Map(
+                  (taskSubmissions || [])
+                    .filter(s => s.admin_tasks?.id)
+                    .map(s => [s.admin_tasks?.id, s.admin_tasks])
+                    .sort((a, b) => 
+                      (a[1]?.title || '').localeCompare(b[1]?.title || '')
+                    )
+                ).values()
+              ).map((task) => (
+                <option key={task?.id} value={task?.id || ''}>
+                  {task?.title}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* TABLE */}
@@ -1084,7 +1115,11 @@ setStats({
           </thead>
 
           <tbody className="bg-white divide-y divide-gray-200">
-            {taskSubmissions.map((submission) => (
+            {taskSubmissions
+              .filter(submission => 
+                !selectedTaskFilter || submission.admin_tasks?.id === selectedTaskFilter
+              )
+              .map((submission) => (
               <tr key={submission.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
                   <div className="text-sm font-medium text-gray-900">
