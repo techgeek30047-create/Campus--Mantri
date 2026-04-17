@@ -1419,7 +1419,6 @@ setStats({
         </div>
       )}
 
-      </div>
 
       {/* Campus Mantris List Modal */}
       {showMantriList && (
