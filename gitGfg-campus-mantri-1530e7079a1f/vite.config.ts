@@ -4,12 +4,16 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   base: '/',
+
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
     minify: 'esbuild',
-    target: ['es2015', 'chrome58', 'firefox57', 'safari11'],
+
+    // 🔥 MAIN FIX
+    target: 'esnext',
+
     rollupOptions: {
       output: {
         manualChunks: {
@@ -20,28 +24,37 @@ export default defineConfig({
         }
       }
     },
+
     chunkSizeWarningLimit: 1000
   },
+
   server: {
     port: 5173,
-    host: true,
-    strictPort: false,
-    open: false
+    host: true
   },
+
   preview: {
     port: 4173,
-    host: true,
-    strictPort: false
+    host: true
   },
+
   define: {
-    global: 'globalThis',
+    global: 'globalThis'
   },
+
   optimizeDeps: {
-    include: ['react', 'react-dom', '@supabase/supabase-js', 'lucide-react', 'bcryptjs'],
-    exclude: []
+    include: [
+      'react',
+      'react-dom',
+      '@supabase/supabase-js',
+      'lucide-react',
+      'bcryptjs'
+    ]
   },
+
+  // 🔥 REMOVE OLD TARGET ISSUE
   esbuild: {
-    target: 'es2015',
+    target: 'esnext',
     logOverride: { 'this-is-undefined-in-esm': 'silent' }
   }
 });
