@@ -25,22 +25,22 @@ export const supabase = createClient(
   }
 );
 
-// ✅ Connection test
+// ✅ Connection test (FIXED)
 export const testSupabaseConnection = async (): Promise<boolean> => {
   try {
-    const { error } = await supabase
+    const res = await supabase
       .from('campus_mantris')
       .select('*')
       .limit(1);
 
-    if (error) {
-      console.error('Database connection failed:', error.message);
+    if (res && res.error) {
+      console.error('Database connection failed:', res.error);
       return false;
     }
 
     return true;
-  } catch (error) {
-    console.error('Database connection error:', error);
+  } catch (err) {
+    console.error('Database connection error:', err);
     return false;
   }
 };
@@ -49,7 +49,7 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
 export const isSupabaseAvailable = () =>
   !!supabaseUrl && !!supabaseKey;
 
-// ✅ Alias (so isSupabaseConfigured import kabhi fail na ho)
+// ✅ Alias
 export const isSupabaseConfigured = isSupabaseAvailable;
 
 /* ===========================
@@ -161,7 +161,7 @@ export type PerformanceMetrics = {
   created_at: string;
 };
 
-// Safe wrapper
+// ✅ Safe wrapper (NO CHANGE NEEDED)
 export const safeSupabaseOperation = async <T>(
   operation: () => Promise<{ data: T | null; error: any }>
 ): Promise<{ data: T | null; error: any }> => {
