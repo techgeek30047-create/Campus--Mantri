@@ -1506,7 +1506,6 @@ setStats({
           </div>
         </div>
       )}
-    </div>
   );
 };
 
