@@ -1505,6 +1505,7 @@ setStats({
             </div>
           </div>
         </div>
+  </div>
       )}
   );
 };
