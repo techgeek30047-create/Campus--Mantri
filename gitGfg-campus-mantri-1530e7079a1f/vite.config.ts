@@ -11,19 +11,11 @@ export default defineConfig({
     sourcemap: false,
     minify: 'esbuild',
 
-    // 🔥 MAIN FIX
+    // ✅ FINAL FIX
     target: 'esnext',
 
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          supabase: ['@supabase/supabase-js'],
-          ui: ['lucide-react'],
-          utils: ['bcryptjs']
-        }
-      }
-    },
+    // ❌ REMOVE manualChunks पूरी तरह
+    // rollupOptions: {}
 
     chunkSizeWarningLimit: 1000
   },
@@ -47,14 +39,11 @@ export default defineConfig({
       'react',
       'react-dom',
       '@supabase/supabase-js',
-      'lucide-react',
-      'bcryptjs'
+      'lucide-react'
     ]
   },
 
-  // 🔥 REMOVE OLD TARGET ISSUE
   esbuild: {
-    target: 'esnext',
-    logOverride: { 'this-is-undefined-in-esm': 'silent' }
+    target: 'esnext'
   }
 });
