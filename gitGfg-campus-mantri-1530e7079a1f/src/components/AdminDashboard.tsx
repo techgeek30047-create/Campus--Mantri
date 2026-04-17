@@ -1507,7 +1507,7 @@ setStats({
         </div>
       )}
     </div>
-  )}
+  );
 };
 
 export default AdminDashboard;
