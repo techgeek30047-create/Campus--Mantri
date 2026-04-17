@@ -23,7 +23,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      const { data, error } = await supabase
+      const res = await supabase
         .from('task_submissions')
         .select(`
           *,
@@ -33,12 +33,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
         .range(from, to)
         .order('submitted_at', { ascending: false });
 
-      if (error) {
-        console.error(error);
+      if (res.error) {
+        console.error(res.error);
         return;
       }
 
-      setTaskSubmissions(data || []);
+      setTaskSubmissions(res.data || []);
     } catch (err) {
       console.error(err);
     }
@@ -92,10 +92,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
     }
   };
 
-  // ✅ SAFE UNIQUE TASKS (FIXED)
+  // ✅ UNIQUE TASKS SAFE
   const uniqueTasks = Array.from(
     new Map(
-      taskSubmissions
+      (taskSubmissions || [])
         .filter(s => s.admin_tasks && s.admin_tasks.id)
         .map(s => [s.admin_tasks?.id, s.admin_tasks])
     ).values()
@@ -105,7 +105,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
     <div className="p-6">
 
       <h2 className="text-2xl font-bold mb-4">
-        Submissions ({taskSubmissions.filter(s => s.status === 'submitted').length} Pending)
+        Submissions ({(taskSubmissions || []).filter(s => s.status === 'submitted').length} Pending)
       </h2>
 
       {/* FILTERS */}
@@ -149,7 +149,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
         </thead>
 
         <tbody>
-          {taskSubmissions
+          {(taskSubmissions || [])
             .filter(s => {
               const t = !selectedTaskFilter || s.admin_tasks?.id === selectedTaskFilter;
               const st = statusFilter === 'all' || s.status === statusFilter;
@@ -169,7 +169,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
                       ? 'text-red-600'
                       : 'text-yellow-600'
                   }>
-                    {sub.status}
+                    {sub.status || '-'}
                   </span>
                 </td>
 
