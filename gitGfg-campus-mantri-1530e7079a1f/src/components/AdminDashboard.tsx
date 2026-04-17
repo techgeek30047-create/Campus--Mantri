@@ -40,6 +40,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [pointsEnabled, setPointsEnabled] = useState<boolean | null>(null);
   // Task filter state for submissions
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedTaskFilter, setSelectedTaskFilter] = useState<string>('');
   // 🔹 Submissions pagination state
 const [page, setPage] = useState(1);
@@ -1079,6 +1080,16 @@ setStats({
               }}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
             >
+              <select
+  value={statusFilter}
+  onChange={(e) => setStatusFilter(e.target.value)}
+  className="w-full mt-2 px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900"
+>
+  <option value="all">All Status</option>
+  <option value="submitted">Pending</option>
+  <option value="approved">Approved</option>
+  <option value="rejected">Rejected</option>
+</select>
               <option value="">All Tasks</option>
               {Array.from(
                 new Map(
@@ -1116,9 +1127,13 @@ setStats({
 
           <tbody className="bg-white divide-y divide-gray-200">
             {taskSubmissions
-              .filter(submission => 
-                !selectedTaskFilter || submission.admin_tasks?.id === selectedTaskFilter
-              )
+            .filter(submission => {
+  const matchTask = !selectedTaskFilter || submission.admin_tasks?.id === selectedTaskFilter;
+  const matchStatus =
+    statusFilter === 'all' || submission.status === statusFilter;
+
+  return matchTask && matchStatus;
+})
               .map((submission) => (
               <tr key={submission.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
