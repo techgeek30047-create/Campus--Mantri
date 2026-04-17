@@ -17,7 +17,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
 
   const PAGE_SIZE = 50;
 
-  // ✅ FETCH SUBMISSIONS (SAFE)
+  // ✅ FETCH SAFE
   const fetchSubmissions = async () => {
     try {
       const from = (page - 1) * PAGE_SIZE;
@@ -48,7 +48,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
     fetchSubmissions();
   }, [page]);
 
-  // ✅ APPROVE (TYPE FIX)
+  // ✅ APPROVE
   const handleApproveSubmission = async (id: any) => {
     try {
       const submission = taskSubmissions.find(s => s.id === id);
@@ -65,7 +65,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
     }
   };
 
-  // ❌ REJECT (TYPE FIX)
+  // ❌ REJECT
   const handleRejectSubmission = async (id: any) => {
     try {
       await supabase.rpc('update_submission_status', {
@@ -92,17 +92,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
     }
   };
 
-  const formatDate = (date: any) => {
-    if (!date) return '';
-    return new Date(date).toLocaleDateString();
-  };
-
-  // ✅ SAFE UNIQUE TASKS (BUG FIX)
+  // ✅ SAFE UNIQUE TASKS (FIXED)
   const uniqueTasks = Array.from(
     new Map(
       taskSubmissions
         .filter(s => s.admin_tasks && s.admin_tasks.id)
-        .map(s => [s.admin_tasks!.id, s.admin_tasks])
+        .map(s => [s.admin_tasks?.id, s.admin_tasks])
     ).values()
   );
 
@@ -116,7 +111,6 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
       {/* FILTERS */}
       <div className="flex gap-4 mb-4">
 
-        {/* TASK FILTER */}
         <select
           value={selectedTaskFilter}
           onChange={(e) => setSelectedTaskFilter(e.target.value)}
@@ -124,13 +118,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
         >
           <option value="">All Tasks</option>
           {uniqueTasks.map((task: any) => (
-            <option key={task.id || ''} value={task.id || ''}>
-              {task.title}
+            <option key={task?.id || ''} value={task?.id || ''}>
+              {task?.title}
             </option>
           ))}
         </select>
 
-        {/* STATUS FILTER */}
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
