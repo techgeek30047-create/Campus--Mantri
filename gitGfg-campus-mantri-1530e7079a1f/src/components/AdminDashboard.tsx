@@ -1062,176 +1062,206 @@ setStats({
       </h3>
     </div>
 
-    {/* ✅ WHITE CARD START */}
-    <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-      
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h4 className="text-lg font-semibold text-gray-900">
-            All Submissions
-          </h4>
-          <div className="w-64">
-            <select
-              value={selectedTaskFilter}
-              onChange={(e) => {
-                setSelectedTaskFilter(e.target.value);
-                setPage(1);
-              }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="">All Tasks</option>
-              {Array.from(
-                new Map(
-                  (taskSubmissions || [])
-                    .filter(s => s.admin_tasks?.id)
-                    .map(s => [s.admin_tasks?.id, s.admin_tasks])
-                    .sort((a, b) => 
-                      (a[1]?.title || '').localeCompare(b[1]?.title || '')
-                    )
-                ).values()
-              ).map((task) => (
-                <option key={task?.id} value={task?.id || ''}>
-                  {task?.title}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+{/* ✅ WHITE CARD START */}
+<div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+  
+  <div className="p-6 border-b border-gray-200">
+    <div className="flex justify-between items-center">
+      <h4 className="text-lg font-semibold text-gray-900">
+        All Submissions
+      </h4>
 
-      {/* TABLE */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campus Mantri</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Task</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submission</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proof</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody className="bg-white divide-y divide-gray-200">
-            {taskSubmissions
-              .filter(submission => 
-                !selectedTaskFilter || submission.admin_tasks?.id === selectedTaskFilter
-              )
-              .map((submission) => (
-              <tr key={submission.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-900">
-                    {submission.campus_mantris?.name}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {submission.campus_mantris?.college_name}
-                  </div>
-                </td>
-
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {submission.admin_tasks?.title}
-                </td>
-
-                <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
-                  {submission.submission_text}
-                </td>
-
-                <td className="px-6 py-4">
-                  {submission.proof_url ? (
-                    <a
-                      href={submission.proof_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-sm"
-                    >
-                      View Proof
-                    </a>
-                  ) : (
-                    <span className="text-gray-400 text-sm">No proof</span>
-                  )}
-                </td>
-
-                <td className="px-6 py-4 text-sm text-gray-900">
-                  {formatDate(submission.submission_date)}
-                </td>
-
-                <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                    submission.status === 'approved'
-                      ? 'bg-green-100 text-green-800'
-                      : submission.status === 'rejected'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {submission.status}
-                  </span>
-                </td>
-
-                <td className="px-6 py-4 text-sm space-x-2">
-                  {submission.status === 'submitted' ? (
-                    <>
-                      <button
-                        onClick={() => handleApproveSubmission(submission.id)}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleRejectSubmission(submission.id, 'Please improve and resubmit')
-                        }
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-gray-500">
-                      {submission.status === 'approved'
-                        ? `${submission.points_awarded} pts awarded`
-                        : 'Rejected'}
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* ✅ PAGINATION INSIDE CARD */}
-      <div className="flex justify-center items-center gap-4 py-6 border-t">
-        <button
-          onClick={() => setPage(p => Math.max(1, p - 1))}
-          disabled={page === 1}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+      <div className="w-64">
+        <select
+          value={selectedTaskFilter}
+          onChange={(e) => {
+            setSelectedTaskFilter(e.target.value);
+            setPage(1);
+          }}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
         >
-          Prev
-        </button>
+          {/* ✅ DEFAULT */}
+          <option value="">All Tasks</option>
 
-        <span className="font-semibold text-gray-700">
-          Page {page} of {Math.ceil(totalSubmissions / PAGE_SIZE)}
-        </span>
+          {/* ✅ ADDED FILTER */}
+          <option value="pending">Pending Submissions</option>
 
-        <button
-          onClick={() =>
-            setPage(p =>
-              p < Math.ceil(totalSubmissions / PAGE_SIZE) ? p + 1 : p
-            )
-          }
-          disabled={page >= Math.ceil(totalSubmissions / PAGE_SIZE)}
-          className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
+          {/* ✅ TASK LIST */}
+          {Array.from(
+            new Map(
+              (taskSubmissions || [])
+                .filter(s => s.admin_tasks?.id)
+                .map(s => [s.admin_tasks?.id, s.admin_tasks])
+                .sort((a, b) =>
+                  (a[1]?.title || '').localeCompare(b[1]?.title || '')
+                )
+            ).values()
+          ).map((task) => (
+            <option key={task?.id} value={task?.id || ''}>
+              {task?.title}
+            </option>
+          ))}
+        </select>
       </div>
-
     </div>
-    {/* ✅ WHITE CARD END */}
   </div>
-)}
+
+  {/* ✅ TABLE */}
+  <div className="overflow-x-auto">
+    <table className="w-full">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Campus Mantri</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Task</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Submission</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Proof</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody className="bg-white divide-y divide-gray-200">
+        {taskSubmissions
+          .filter((submission) => {
+
+            // ✅ PENDING FILTER LOGIC
+            if (selectedTaskFilter === "pending") {
+              return submission.status === "submitted";
+            }
+
+            // ✅ NORMAL FILTER
+            return (
+              !selectedTaskFilter ||
+              submission.admin_tasks?.id === selectedTaskFilter
+            );
+          })
+          .map((submission) => (
+            <tr key={submission.id} className="hover:bg-gray-50">
+
+              {/* USER */}
+              <td className="px-6 py-4">
+                <div className="text-sm font-medium text-gray-900">
+                  {submission.campus_mantris?.name}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {submission.campus_mantris?.college_name}
+                </div>
+              </td>
+
+              {/* TASK */}
+              <td className="px-6 py-4 text-sm text-gray-900">
+                {submission.admin_tasks?.title}
+              </td>
+
+              {/* SUBMISSION */}
+              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                {submission.submission_text}
+              </td>
+
+              {/* PROOF */}
+              <td className="px-6 py-4">
+                {submission.proof_url ? (
+                  <a
+                    href={submission.proof_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-sm"
+                  >
+                    View Proof
+                  </a>
+                ) : (
+                  <span className="text-gray-400 text-sm">No proof</span>
+                )}
+              </td>
+
+              {/* DATE */}
+              <td className="px-6 py-4 text-sm text-gray-900">
+                {formatDate(submission.submission_date)}
+              </td>
+
+              {/* STATUS */}
+              <td className="px-6 py-4">
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                    submission.status === "approved"
+                      ? "bg-green-100 text-green-800"
+                      : submission.status === "rejected"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {submission.status}
+                </span>
+              </td>
+
+              {/* ACTIONS */}
+              <td className="px-6 py-4 text-sm space-x-2">
+                {submission.status === "submitted" ? (
+                  <>
+                    <button
+                      onClick={() => handleApproveSubmission(submission.id)}
+                      className="text-green-600 hover:text-green-900"
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleRejectSubmission(
+                          submission.id,
+                          "Please improve and resubmit"
+                        )
+                      }
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Reject
+                    </button>
+                  </>
+                ) : (
+                  <span className="text-gray-500">
+                    {submission.status === "approved"
+                      ? `${submission.points_awarded} pts awarded`
+                      : "Rejected"}
+                  </span>
+                )}
+              </td>
+
+            </tr>
+          ))}
+      </tbody>
+    </table>
+  </div>
+
+  {/* ✅ PAGINATION */}
+  <div className="flex justify-center items-center gap-4 py-6 border-t">
+    <button
+      onClick={() => setPage((p) => Math.max(1, p - 1))}
+      disabled={page === 1}
+      className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+    >
+      Prev
+    </button>
+
+    <span className="font-semibold text-gray-700">
+      Page {page} of {Math.ceil(totalSubmissions / PAGE_SIZE)}
+    </span>
+
+    <button
+      onClick={() =>
+        setPage((p) =>
+          p < Math.ceil(totalSubmissions / PAGE_SIZE) ? p + 1 : p
+        )
+      }
+      disabled={page >= Math.ceil(totalSubmissions / PAGE_SIZE)}
+      className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+    >
+      Next
+    </button>
+  </div>
+
+</div>
+{/* ✅ WHITE CARD END */}
       {/* Task Form Modal */}
       {showTaskForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
