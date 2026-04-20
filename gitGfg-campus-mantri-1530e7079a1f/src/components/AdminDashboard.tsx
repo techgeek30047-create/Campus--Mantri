@@ -1116,9 +1116,10 @@ setStats({
 
           <tbody className="bg-white divide-y divide-gray-200">
             {taskSubmissions
-              .filter(submission => 
-                !selectedTaskFilter || submission.admin_tasks?.id === selectedTaskFilter
-              )
+  .filter(submission => 
+    (!selectedTaskFilter || submission.admin_tasks?.id === selectedTaskFilter)
+    && submission.status === 'submitted'
+  )
               .map((submission) => (
               <tr key={submission.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4">
