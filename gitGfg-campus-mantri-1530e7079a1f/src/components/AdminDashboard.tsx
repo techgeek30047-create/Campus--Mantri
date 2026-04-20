@@ -1,8 +1,6 @@
-import { Archive, Bell, CheckCircle, Clock, Download, FileText, Link, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Upload, Users, Menu, X } from 'lucide-react';
+import { Archive, Bell, CheckCircle, Clock, Download, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Users, Menu, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission, isSupabaseAvailable } from '../lib/supabase';
-
-import { Admin } from '../lib/supabase';
+import { Admin, AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission, isSupabaseAvailable } from '../lib/supabase';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -299,7 +297,7 @@ const totalMantrisCount = typeof exactCount === 'number' ? exactCount : ((mantri
 // Calculate comprehensive stats (use safe fallbacks)
 const activeTasks = (adminTasksData || []).filter(task => task.status === 'active').length;
 const completedTasks = (tasksData || []).filter(task => task.status === 'completed').length;
-const { count: pendingCount, error: pendingError } = await supabase
+const { count: pendingCount } = await supabase
   .from('task_submissions')
   .select('*', { count: 'exact', head: true })
   .eq('status', 'submitted');
@@ -617,16 +615,6 @@ setStats({
     const colleges = mantris.map(mantri => mantri.college_name).filter(Boolean);
     return [...new Set(colleges)].sort();
   };
-//proof section//
-  const getProofTypeIcon = (proofType: string) => {
-    switch (proofType) {
-      case 'linkedin': return <Link className="h-4 w-4" />;
-      case 'image': return <Upload className="h-4 w-4" />;
-      case 'document': return <FileText className="h-4 w-4" />;
-      default: return <Link className="h-4 w-4" />;
-    }
-  };
-
   const formatDate = (date?: string | null) => {
     if (!date) return 'N/A';
     try {
@@ -1091,9 +1079,9 @@ setStats({
             new Map(
               (taskSubmissions || [])
                 .filter(s => s.admin_tasks?.id)
-                .map(s => [s.admin_tasks?.id, s.admin_tasks])
+                .map(s => [s.admin_tasks!.id, s.admin_tasks!] as const)
                 .sort((a, b) =>
-                  (a[1]?.title || '').localeCompare(b[1]?.title || '')
+                  a[1].title.localeCompare(b[1].title)
                 )
             ).values()
           ).map((task) => (
@@ -1505,8 +1493,9 @@ setStats({
             </div>
           </div>
         </div>
-  </div>
       )}
+    </div>
+  </div>
   );
 };
 
