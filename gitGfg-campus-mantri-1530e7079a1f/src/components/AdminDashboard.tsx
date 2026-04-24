@@ -1,4 +1,4 @@
-import { Archive, Bell, CheckCircle, Clock, Download, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Users, Menu, X } from 'lucide-react';
+import { Archive, Bell, CheckCircle, Clock, Download, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Users, Menu, X, Moon, Sun } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission, isSupabaseAvailable } from '../lib/supabase';
 
@@ -33,6 +33,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'tasks' | 'leaderboard' | 'submissions'>('dashboard');
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [clearingTasks, setClearingTasks] = useState(false);
   const [clearingAnnouncements, setClearingAnnouncements] = useState(false);
   const [recomputingLeaderboard, setRecomputingLeaderboard] = useState(false);
@@ -70,6 +71,18 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
     fetchDashboardData();
     fetchAdminStats();
   }, []);
+
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('campus-mantri-theme');
+    if (storedTheme === 'dark') {
+      setIsDarkMode(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('campus-mantri-theme', isDarkMode ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
 
   // Reset page and filter when switching to submissions view
   useEffect(() => {
@@ -689,23 +702,30 @@ setStats({
   }
 
   return (
-    <div className="min-h-screen w-screen overflow-x-hidden bg-white">
+    <div className="min-h-screen w-screen overflow-x-hidden bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       {/* Header */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm dark:bg-slate-900 dark:border-slate-700">
         <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center text-white font-bold text-lg">G</div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Campus Mantri</h1>
-              <p className="text-xs text-gray-500">Admin Dashboard</p>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">Campus Mantri</h1>
+              <p className="text-xs text-gray-500 dark:text-slate-400">Admin Dashboard</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowMantriList(true)}
-              className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium text-sm hidden sm:block"
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium text-sm hidden sm:block dark:text-slate-200 dark:hover:text-white"
             >
               Find Mantris
+            </button>
+            <button
+              onClick={() => setIsDarkMode((prev) => !prev)}
+              className="inline-flex items-center justify-center px-3 py-2 rounded-full border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
             <button
               onClick={onLogout}
@@ -718,30 +738,30 @@ setStats({
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200 py-12 dark:from-slate-900 dark:to-slate-800 dark:border-slate-700">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h2>
-            <p className="text-gray-600">Monitor tasks, mantris, and performance metrics</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2 dark:text-slate-100">Dashboard Overview</h2>
+            <p className="text-gray-600 dark:text-slate-300">Monitor tasks, mantris, and performance metrics</p>
           </div>
           
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <p className="text-sm font-medium text-gray-600 mb-2">Total Campus Mantris</p>
-              <p className="text-4xl font-bold text-green-600">{stats?.totalMantris || 0}</p>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+              <p className="text-sm font-medium text-gray-600 mb-2 dark:text-slate-400">Total Campus Mantris</p>
+              <p className="text-4xl font-bold text-green-600 dark:text-emerald-300">{stats?.totalMantris || 0}</p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <p className="text-sm font-medium text-gray-600 mb-2">Active Tasks</p>
-              <p className="text-4xl font-bold text-emerald-600">{stats?.activeTasks || 0}</p>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+              <p className="text-sm font-medium text-gray-600 mb-2 dark:text-slate-400">Active Tasks</p>
+              <p className="text-4xl font-bold text-emerald-600 dark:text-emerald-300">{stats?.activeTasks || 0}</p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <p className="text-sm font-medium text-gray-600 mb-2">Pending Submissions</p>
-              <p className="text-4xl font-bold text-amber-600">{stats?.pendingSubmissions || 0}</p>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+              <p className="text-sm font-medium text-gray-600 mb-2 dark:text-slate-400">Pending Submissions</p>
+              <p className="text-4xl font-bold text-amber-600 dark:text-amber-300">{stats?.pendingSubmissions || 0}</p>
             </div>
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-              <p className="text-sm font-medium text-gray-600 mb-2">Active Colleges</p>
-              <p className="text-4xl font-bold text-teal-600">{stats?.activeColleges || 0}</p>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 dark:bg-slate-800 dark:border-slate-700">
+              <p className="text-sm font-medium text-gray-600 mb-2 dark:text-slate-400">Active Colleges</p>
+              <p className="text-4xl font-bold text-teal-600 dark:text-teal-300">{stats?.activeColleges || 0}</p>
             </div>
           </div>
         </div>
@@ -751,16 +771,6 @@ setStats({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* View Controls */}
         <div className="flex gap-2 mb-8 flex-wrap">
-          <button
-            onClick={() => setCurrentView('dashboard')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              currentView === 'dashboard'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-            }`}
-          >
-            Dashboard
-          </button>
           <button
             onClick={() => setCurrentView('tasks')}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
