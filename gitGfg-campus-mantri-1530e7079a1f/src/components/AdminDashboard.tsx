@@ -1073,7 +1073,7 @@ setStats({
                   {submission.admin_tasks?.title}
                 </td>
 
-                <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                <td className="px-6 py-4 text-sm text-gray-900 break-words whitespace-pre-wrap">
                   {submission.submission_text}
                 </td>
 
