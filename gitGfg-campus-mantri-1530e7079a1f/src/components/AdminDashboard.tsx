@@ -34,6 +34,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'tasks' | 'leaderboard' | 'submissions'>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [selectedSubmissionForView, setSelectedSubmissionForView] = useState<TaskSubmission | null>(null);
   const [clearingTasks, setClearingTasks] = useState(false);
   const [clearingAnnouncements, setClearingAnnouncements] = useState(false);
   const [recomputingLeaderboard, setRecomputingLeaderboard] = useState(false);
@@ -1073,8 +1074,13 @@ setStats({
                   {submission.admin_tasks?.title}
                 </td>
 
-                <td className="px-6 py-4 text-sm text-gray-900 break-words whitespace-pre-wrap">
-                  {submission.submission_text}
+                <td className="px-6 py-4 text-sm text-gray-900">
+                  <button
+                    onClick={() => setSelectedSubmissionForView(submission)}
+                    className="text-cyan-600 hover:text-cyan-800 hover:underline font-medium"
+                  >
+                    View Text
+                  </button>
                 </td>
 
                 <td className="px-6 py-4">
@@ -1108,12 +1114,12 @@ setStats({
                   </span>
                 </td>
 
-                <td className="px-6 py-4 text-sm space-x-2">
+                <td className="px-6 py-4 text-sm">
                   {submission.status === 'submitted' ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-col gap-2 min-w-max">
                       <button
                         onClick={() => handleApproveSubmission(submission.id)}
-                        className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg font-semibold transition-colors duration-200"
+                        className="inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors duration-200 whitespace-nowrap"
                       >
                         <CheckCircle className="h-4 w-4" />
                         Approve
@@ -1122,17 +1128,17 @@ setStats({
                         onClick={() =>
                           handleRejectSubmission(submission.id, 'Please improve and resubmit')
                         }
-                        className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-semibold transition-colors duration-200"
+                        className="inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2.5 rounded-lg font-semibold transition-colors duration-200 whitespace-nowrap"
                       >
                         <X className="h-4 w-4" />
                         Reject
                       </button>
                     </div>
                   ) : (
-                    <span className="text-gray-500">
+                    <span className="text-gray-500 text-sm">
                       {submission.status === 'approved'
-                        ? `${submission.points_awarded} pts awarded`
-                        : 'Rejected'}
+                        ? `✓ ${submission.points_awarded} pts`
+                        : '✗ Rejected'}
                     </span>
                   )}
                 </td>
@@ -1169,10 +1175,58 @@ setStats({
         </button>
       </div>
 
+      {/* ✅ SUBMISSION TEXT MODAL */}
+      {selectedSubmissionForView && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedSubmissionForView.campus_mantris?.name} - {selectedSubmissionForView.admin_tasks?.title}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Submitted on {formatDate(selectedSubmissionForView.submission_date)}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedSubmissionForView(null)}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Submission Text</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 whitespace-pre-wrap text-sm text-gray-900 break-words">
+                    {selectedSubmissionForView.submission_text}
+                  </div>
+                </div>
+                {selectedSubmissionForView.proof_url && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Proof Link</h4>
+                    <a
+                      href={selectedSubmissionForView.proof_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-cyan-600 hover:text-cyan-800 hover:underline text-sm break-all"
+                    >
+                      {selectedSubmissionForView.proof_url}
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+
     {/* ✅ WHITE CARD END */}
   </div>
 )}
+
       {/* Task Form Modal */}
       {showTaskForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
