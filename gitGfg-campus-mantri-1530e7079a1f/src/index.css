@@ -2,35 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
-/* College-themed floating icons animation */
-.college-anim-layer {
-	position: absolute;
-	inset: 0;
-	pointer-events: none;
-	overflow: hidden;
+html.dark,
+body.dark {
+  background-color: #020617;
+  color: #f8fafc;
 }
 
-.college-emoji {
-	position: absolute;
-	font-size: 1.6rem;
-	opacity: 0.85;
-	will-change: transform, opacity;
-	animation: floatY 6s ease-in-out infinite;
+.dark .bg-white {
+  background-color: #020617 !important;
 }
 
-@keyframes floatY {
-	0% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
-	50% { transform: translateY(-18px) rotate(8deg); opacity: 1; }
-	100% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+.dark .bg-gray-50,
+.dark .bg-slate-50,
+.dark .bg-slate-100 {
+  background-color: #0f172a !important;
 }
 
-.college-emoji.slow { animation-duration: 9s; }
-.college-emoji.fast { animation-duration: 5s; }
-.college-emoji.delay-1 { animation-delay: 0s; }
-.college-emoji.delay-2 { animation-delay: 1.5s; }
-.college-emoji.delay-3 { animation-delay: 3s; }
-.college-emoji.delay-4 { animation-delay: 4.5s; }
-.login-hero-bg {
-	/* Slightly deeper light-green backdrop */
-	background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #eefaf4 100%);
+.dark .bg-gray-100,
+.dark .bg-gray-200,
+.dark .border-gray-200,
+.dark .border-gray-100 {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+}
+
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #e2e8f0 !important;
+}
+
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover,
+.dark .hover\:bg-slate-50:hover {
+  background-color: #1f2937 !important;
+}
+
+.dark .bg-gradient-to-r.from-yellow-50.to-orange-50 {
+  background-image: none !important;
+  background-color: #0f172a !important;
+}
+
+.dark .bg-gray-900 {
+  background-color: #020617 !important;
+}
+
+/* Dark mode overrides for Tailwind utility classes used throughout AdminDashboard */
+.dark .bg-white {
+  background-color: #0f172a !important;
+}
+.dark .bg-gray-50 {
+  background-color: #111827 !important;
+}
+.dark .bg-gray-100 {
+  background-color: #111827 !important;
+}
+.dark .bg-gradient-to-r.from-yellow-50.to-orange-50 {
+  background-image: none !important;
+  background-color: #111827 !important;
+}
+.dark .border-gray-200 {
+  border-color: #334155 !important;
+}
+.dark .border-gray-100 {
+  border-color: #334155 !important;
+}
+.dark .text-gray-900 {
+  color: #f8fafc !important;
+}
+.dark .text-gray-800 {
+  color: #e2e8f0 !important;
+}
+.dark .text-gray-700,
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #cbd5e1 !important;
+}
+.dark .hover\:bg-gray-50:hover,
+.dark .hover\:bg-gray-100:hover {
+  background-color: #1f2937 !important;
+}
+.dark .bg-slate-100 {
+  background-color: #0f172a !important;
+}
+.dark .bg-slate-50 {
+  background-color: #0f172a !important;
 }
