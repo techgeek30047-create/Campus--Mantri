@@ -1,4 +1,4 @@
-import { Archive, Bell, CheckCircle, Clock, Download, FileText, Link, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Upload, Users, Menu, X } from 'lucide-react';
+import { Archive, Bell, CheckCircle, Clock, Download, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Users, Menu, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission, isSupabaseAvailable } from '../lib/supabase';
 
@@ -299,7 +299,7 @@ const totalMantrisCount = typeof exactCount === 'number' ? exactCount : ((mantri
 // Calculate comprehensive stats (use safe fallbacks)
 const activeTasks = (adminTasksData || []).filter(task => task.status === 'active').length;
 const completedTasks = (tasksData || []).filter(task => task.status === 'completed').length;
-const { count: pendingCount, error: pendingError } = await supabase
+const { count: pendingCount } = await supabase
   .from('task_submissions')
   .select('*', { count: 'exact', head: true })
   .eq('status', 'submitted');
@@ -618,15 +618,6 @@ setStats({
     return [...new Set(colleges)].sort();
   };
 //proof section//
-  const getProofTypeIcon = (proofType: string) => {
-    switch (proofType) {
-      case 'linkedin': return <Link className="h-4 w-4" />;
-      case 'image': return <Upload className="h-4 w-4" />;
-      case 'document': return <FileText className="h-4 w-4" />;
-      default: return <Link className="h-4 w-4" />;
-    }
-  };
-
   const formatDate = (date?: string | null) => {
     if (!date) return 'N/A';
     try {
@@ -683,10 +674,10 @@ setStats({
   };
 
   const statCards = [
-    { title: 'Total Campus Mantris', value: stats.totalMantris, icon: Users, color: 'bg-blue-500', change: '+12%' },
-    { title: 'Active Admin Tasks', value: stats.activeTasks, icon: Target, color: 'bg-purple-500', change: '+8%' },
-    { title: 'Pending Submissions', value: stats.pendingSubmissions, icon: Clock, color: 'bg-yellow-500', change: '-5%' },
-    { title: 'Active Colleges', value: stats.activeColleges, icon: Users, color: 'bg-indigo-500', change: '+3%' }
+    { title: 'Total Campus Mantris', value: stats.totalMantris, icon: Users, color: 'bg-cyan-500', change: '+12%' },
+    { title: 'Active Admin Tasks', value: stats.activeTasks, icon: Target, color: 'bg-teal-500', change: '+8%' },
+    { title: 'Pending Submissions', value: stats.pendingSubmissions, icon: Clock, color: 'bg-amber-500', change: '-5%' },
+    { title: 'Active Colleges', value: stats.activeColleges, icon: Users, color: 'bg-emerald-500', change: '+3%' }
   ];
 
   if (loading) {
@@ -698,274 +689,212 @@ setStats({
   }
 
   return (
-    <div className="min-h-screen w-screen overflow-x-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen w-screen overflow-x-hidden bg-white">
       {/* Header */}
-      <header className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-2xl border-b-4 border-indigo-400/50">
-        <div className="px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-6 sm:space-y-0">
-            <div className="text-white">
-              <h1 className="text-4xl font-bold tracking-tight">Admin Dashboard</h1>
-              <p className="text-indigo-100 text-lg font-medium mt-2">Task Management & Analytics</p>
+      <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center text-white font-bold text-lg">G</div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Campus Mantri</h1>
+              <p className="text-xs text-gray-500">Admin Dashboard</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={handleClearOldTasks}
-                disabled={clearingTasks}
-                className="bg-red-500/90 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm disabled:opacity-50 transform hover:-translate-y-1"
-              >
-                <Archive className="h-4 w-4" />
-                <span>{clearingTasks ? 'Clearing...' : 'Clear Completed'}</span>
-              </button>
-              <button
-                onClick={handleClearOldAnnouncements}
-                disabled={clearingAnnouncements}
-                className="bg-orange-500/90 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm disabled:opacity-50 transform hover:-translate-y-1"
-              >
-                <Trash2 className="h-4 w-4" />
-                <span>{clearingAnnouncements ? 'Clearing...' : 'Clear Announcements'}</span>
-              </button>
-              <button
-                onClick={() => setCurrentView('leaderboard')}
-                className="bg-yellow-500/90 hover:bg-yellow-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
-              >
-                <Trophy className="h-5 w-5" />
-                <span>Leaderboard</span>
-              </button>
-              <button
-                onClick={() => setCurrentView('tasks')}
-                className="bg-purple-500/90 hover:bg-purple-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
-              >
-                <Target className="h-5 w-5" />
-                <span>Manage Tasks</span>
-              </button>
-              <button
-                onClick={() => setShowMantriList(true)}
-                className="bg-blue-500/90 hover:bg-blue-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
-              >
-                <Search className="h-5 w-5" />
-                <span>Find Mantris</span>
-              </button>
-              <button
-                onClick={exportData}
-                className="bg-green-500/90 hover:bg-green-600 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
-              >
-                <Download className="h-5 w-5" />
-                <span>Export Data</span>
-              </button>
-              <button
-                onClick={handleRecomputeLeaderboard}
-                disabled={recomputingLeaderboard}
-                className="bg-amber-400/90 hover:bg-amber-500 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1 disabled:opacity-50"
-              >
-                <RefreshCw className="h-5 w-5" />
-                <span>{recomputingLeaderboard ? 'Recomputing...' : 'Recompute Leaderboard'}</span>
-              </button>
-              <button
-                onClick={onLogout}
-                className="bg-red-600/90 hover:bg-red-700 text-white px-5 py-2.5 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold text-sm transform hover:-translate-y-1"
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Logout</span>
-              </button>
-            {/* Mobile menu toggle - visible on small screens */}
-            <div className="sm:hidden">
-              <button
-                onClick={() => setShowMobileMenu((s) => !s)}
-                aria-label="Open mobile menu"
-                className="p-2 bg-white/10 text-white rounded-lg shadow-sm"
-              >
-                <Menu className="h-5 w-5" />
-              </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowMantriList(true)}
+              className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium text-sm hidden sm:block"
+            >
+              Find Mantris
+            </button>
+            <button
+              onClick={onLogout}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-200 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h2>
+            <p className="text-gray-600">Monitor tasks, mantris, and performance metrics</p>
+          </div>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <p className="text-sm font-medium text-gray-600 mb-2">Total Campus Mantris</p>
+              <p className="text-4xl font-bold text-green-600">{stats?.totalMantris || 0}</p>
             </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <p className="text-sm font-medium text-gray-600 mb-2">Active Tasks</p>
+              <p className="text-4xl font-bold text-emerald-600">{stats?.activeTasks || 0}</p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <p className="text-sm font-medium text-gray-600 mb-2">Pending Submissions</p>
+              <p className="text-4xl font-bold text-amber-600">{stats?.pendingSubmissions || 0}</p>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+              <p className="text-sm font-medium text-gray-600 mb-2">Active Colleges</p>
+              <p className="text-4xl font-bold text-teal-600">{stats?.activeColleges || 0}</p>
             </div>
           </div>
         </div>
-      </header>
+      </section>
 
-    {/* Mobile menu panel */}
-    {showMobileMenu && (
-      <div className="sm:hidden fixed top-20 right-4 z-50 w-[90%] max-w-xs bg-slate-800/95 rounded-xl p-4 shadow-2xl">
-        <div className="flex justify-end mb-2">
-          <button onClick={() => setShowMobileMenu(false)} className="text-slate-300">
-            <X className="h-5 w-5" />
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* View Controls */}
+        <div className="flex gap-2 mb-8 flex-wrap">
+          <button
+            onClick={() => setCurrentView('dashboard')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              currentView === 'dashboard'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+            }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => setCurrentView('tasks')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              currentView === 'tasks'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+            }`}
+          >
+            Manage Tasks
+          </button>
+          <button
+            onClick={() => setCurrentView('leaderboard')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              currentView === 'leaderboard'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+            }`}
+          >
+            Leaderboard
+          </button>
+          <button
+            onClick={() => setCurrentView('submissions')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              currentView === 'submissions'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+            }`}
+          >
+            Submissions
           </button>
         </div>
-        <div className="flex flex-col gap-3">
-          <button onClick={handleClearOldTasks} className="w-full text-left px-4 py-2 rounded-lg bg-red-500 text-white">{clearingTasks ? 'Clearing...' : 'Clear Completed'}</button>
-          <button onClick={handleClearOldAnnouncements} className="w-full text-left px-4 py-2 rounded-lg bg-orange-500 text-white">{clearingAnnouncements ? 'Clearing...' : 'Clear Announcements'}</button>
-          <button onClick={() => { setCurrentView('leaderboard'); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-yellow-500 text-white">Leaderboard</button>
-          <button onClick={() => { setCurrentView('tasks'); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-purple-600 text-white">Manage Tasks</button>
-          <button onClick={() => { setShowMantriList(true); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-blue-500 text-white">Find Mantris</button>
-          <button onClick={() => { exportData(); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-green-500 text-white">Export Data</button>
-          <button onClick={() => { onLogout(); setShowMobileMenu(false);} } className="w-full text-left px-4 py-2 rounded-lg bg-red-600 text-white">Logout</button>
-        </div>
-      </div>
-    )}
 
-      <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {!isSupabaseAvailable() && (
-          <div className="max-w-7xl mx-auto mb-4">
-            <div className="p-3 rounded-md bg-yellow-50 border border-yellow-200 text-yellow-800">
-              <strong>Warning:</strong> Supabase is not configured. Data will not be fetched. Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> in a local <code>.env</code> and restart the dev server.
-            </div>
+          <div className="mb-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+            <p className="text-yellow-800"><strong>Warning:</strong> Supabase is not configured.</p>
           </div>
-        )} 
-        {/* Navigation Tabs */}
-        <div className="flex space-x-2 bg-slate-800/50 backdrop-blur-sm p-2 rounded-xl border border-slate-700 w-fit">
-          {[
-            { key: 'dashboard', label: 'Dashboard', icon: TrendingUp },
-            { key: 'tasks', label: 'Task Management', icon: Target },
-            { key: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-            { key: 'submissions', label: 'Submissions', icon: CheckCircle }
-          ].map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setCurrentView(tab.key as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 ${
-                  currentView === tab.key
-                    ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        )}
 
         {/* Dashboard View */}
         {currentView === 'dashboard' && (
-          <>
-            {/* Enhanced Stats Cards - Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-              {statCards.map((stat, index) => {
-                const Icon = stat.icon;
-                return (
-                  <div
-                    key={index}
-                    className="group relative bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-2xl p-7 border border-slate-600 hover:border-indigo-400/50 transition-all duration-500 transform hover:-translate-y-2 hover:shadow-3xl"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/10 group-hover:to-purple-500/10 rounded-2xl transition-all duration-500"></div>
-                    <div className="relative z-10">
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-slate-300 text-sm font-bold uppercase tracking-wider">{stat.title}</p>
-                        <div className={`${stat.color} p-3 rounded-xl shadow-lg`}>
-                          <Icon className="h-6 w-6 text-white" />
-                        </div>
-                      </div>
-                      <p className="text-4xl font-bold text-white mb-2">{stat.value}</p>
-                      <p className={`text-sm font-semibold ${stat.change.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
-                        {stat.change} from last month
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Admin activity panel (visible to super admins) */}
+          <div className="space-y-8">
+            {/* Admin Activity Panel */}
             {currentAdmin?.is_super && (
-              <div className="mt-6 bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-white font-bold">Admin Activity</h3>
-                  <div className="text-slate-300 text-sm">Showing login & approvals counts for all admins</div>
-                </div>
-
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Admin Activity</h3>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
+                  <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-slate-400">
-                        <th className="py-2 px-3">Admin</th>
-                        <th className="py-2 px-3">Approvals</th>
-                        <th className="py-2 px-3">Last Login</th>
-                        <th className="py-2 px-3">Logged In</th>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <th className="px-4 py-2 text-left text-gray-700 font-semibold">Admin Name</th>
+                        <th className="px-4 py-2 text-left text-gray-700 font-semibold">Approvals</th>
+                        <th className="px-4 py-2 text-left text-gray-700 font-semibold">Last Login</th>
+                        <th className="px-4 py-2 text-left text-gray-700 font-semibold">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {adminStats.map((row) => (
-                        <tr key={row.admin.id} className="border-t border-slate-700/40">
-                          <td className="py-3 px-3 text-white font-semibold">{row.admin.name} <span className="text-slate-400 text-xs ml-2">({row.admin.username})</span></td>
-                          <td className="py-3 px-3 text-slate-200">{row.approvals}</td>
-                          <td className="py-3 px-3 text-slate-200">{row.last_login ? new Date(row.last_login).toLocaleString() : '—'}</td>
-                          <td className="py-3 px-3">{row.logged_in ? <span className="text-green-400 font-bold">Yes</span> : <span className="text-slate-400">No</span>}</td>
+                        <tr key={row.admin.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="px-4 py-3 text-gray-900 font-medium">{row.admin.name}</td>
+                          <td className="px-4 py-3 text-gray-600">{row.approvals}</td>
+                          <td className="px-4 py-3 text-gray-600 text-xs">{row.last_login ? new Date(row.last_login).toLocaleDateString() : '—'}</td>
+                          <td className="px-4 py-3">{row.logged_in ? <span className="text-green-600 font-semibold">Online</span> : <span className="text-gray-400">Offline</span>}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-
               </div>
             )}
-          </>
+          </div>
         )}
 
       {/* Task Management View */}
       {currentView === 'tasks' && (
-        <div className="space-y-8">
+        <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-3xl font-bold text-white">Task Management</h3>
+            <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowAnnouncementForm(true)}
-                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold transform hover:-translate-y-1"
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               >
-                <Bell className="h-5 w-5" />
-                <span>New Announcement</span>
+                <Bell className="h-4 w-4" />
+                New Announcement
               </button>
               <button
                 onClick={() => setShowTaskForm(true)}
-                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-6 py-3 rounded-xl transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-xl font-bold transform hover:-translate-y-1"
+                className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
               >
-                <Plus className="h-5 w-5" />
-                <span>Create Task</span>
+                <Plus className="h-4 w-4" />
+                Create Task
               </button>
             </div>
           </div>
 
-          {/* Active Admin Tasks */}
-          <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-2xl border border-slate-600 overflow-hidden">
-            <div className="p-6 border-b border-slate-600 bg-gradient-to-r from-indigo-600/20 to-purple-600/20">
-              <h4 className="text-xl font-bold text-white">Active Tasks</h4>
+          {/* Active Tasks Table */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h3 className="text-lg font-bold text-gray-900">Active Tasks</h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-800/50 border-b border-slate-600">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Task</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Assigned To</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Due Date</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Points</th>
-                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left font-semibold text-gray-700">Task</th>
+                    <th className="px-6 py-3 text-left font-semibold text-gray-700">Assigned To</th>
+                    <th className="px-6 py-3 text-left font-semibold text-gray-700">Due Date</th>
+                    <th className="px-6 py-3 text-left font-semibold text-gray-700">Points</th>
+                    <th className="px-6 py-3 text-left font-semibold text-gray-700">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-600">
+                <tbody className="divide-y divide-gray-200">
                   {adminTasks.map((task) => (
-                    <tr key={task.id} className="hover:bg-slate-700/50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-bold text-white">{task.title}</div>
-                          <div className="text-sm text-slate-400">{task.description}</div>
-                        </div>
+                    <tr key={task.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900">{task.title}</div>
+                        <div className="text-xs text-gray-600">{task.description}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
+                      <td className="px-6 py-4 text-gray-600">
                         {task.assigned_to ? 'Specific Mantri' : 'All Mantris'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
+                      <td className="px-6 py-4 text-gray-600">
                         {formatDate(task.due_date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-200">
+                      <td className="px-6 py-4 text-gray-600">
                         {task.points ?? 0}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-lg ${
-                          task.status === 'active' ? 'bg-green-500/20 text-green-300 border border-green-500/50' :
-                          task.status === 'completed' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/50' :
-                          'bg-slate-500/20 text-slate-300 border border-slate-500/50'
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
+                          task.status === 'active' ? 'bg-green-100 text-green-800' :
+                          task.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
                         }`}>
-                          {task.status.toUpperCase()}
+                          {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
                         </span>
                       </td>
                     </tr>
@@ -1081,17 +1010,17 @@ setStats({
             >
               <option value="">All Tasks</option>
               {Array.from(
-                new Map(
+                new Map<string, AdminTask>(
                   (taskSubmissions || [])
-                    .filter(s => s.admin_tasks?.id)
-                    .map(s => [s.admin_tasks?.id, s.admin_tasks])
+                    .filter((s): s is TaskSubmission & { admin_tasks: AdminTask } => Boolean(s.admin_tasks?.id))
+                    .map((s) => [s.admin_tasks.id, s.admin_tasks] as [string, AdminTask])
                     .sort((a, b) => 
-                      (a[1]?.title || '').localeCompare(b[1]?.title || '')
+                      (a[1].title || '').localeCompare(b[1].title || '')
                     )
                 ).values()
               ).map((task) => (
-                <option key={task?.id} value={task?.id || ''}>
-                  {task?.title}
+                <option key={task.id} value={task.id}>
+                  {task.title}
                 </option>
               ))}
             </select>
@@ -1144,7 +1073,7 @@ setStats({
                       href={submission.proof_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-sm"
+                      className="text-cyan-600 hover:underline text-sm"
                     >
                       View Proof
                     </a>
@@ -1160,7 +1089,7 @@ setStats({
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                     submission.status === 'approved'
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-emerald-100 text-emerald-800'
                       : submission.status === 'rejected'
                       ? 'bg-red-100 text-red-800'
                       : 'bg-yellow-100 text-yellow-800'
@@ -1171,22 +1100,24 @@ setStats({
 
                 <td className="px-6 py-4 text-sm space-x-2">
                   {submission.status === 'submitted' ? (
-                    <>
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => handleApproveSubmission(submission.id)}
-                        className="text-green-600 hover:text-green-900"
+                        className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg font-semibold transition-colors duration-200"
                       >
+                        <CheckCircle className="h-4 w-4" />
                         Approve
                       </button>
                       <button
                         onClick={() =>
                           handleRejectSubmission(submission.id, 'Please improve and resubmit')
                         }
-                        className="text-red-600 hover:text-red-900"
+                        className="inline-flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-semibold transition-colors duration-200"
                       >
+                        <X className="h-4 w-4" />
                         Reject
                       </button>
-                    </>
+                    </div>
                   ) : (
                     <span className="text-gray-500">
                       {submission.status === 'approved'
