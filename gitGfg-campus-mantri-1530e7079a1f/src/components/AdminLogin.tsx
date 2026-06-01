@@ -2,14 +2,14 @@ import { Eye, EyeOff, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import bcrypt from 'bcryptjs';
-import AdminRegister from './AdminRegister';
 
 interface AdminLoginProps {
   onLogin: (admin: any) => void;
+  onBack: () => void;
 }
 
 
-const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
+const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
@@ -17,7 +17,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [registerMode, setRegisterMode] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,11 +87,6 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
       setLoading(false);
     }
   };
-
-  // Render switching between Login and Register
-  if (registerMode) {
-    return <AdminRegister onRegistered={(admin) => { onLogin(admin); }} onBack={() => setRegisterMode(false)} />;
-  }
 
   // Handle back navigation
   return (
@@ -178,7 +172,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin }) => {
         </form>
 
         <div className="mt-6 text-center flex flex-col gap-3">
-          <button type="button" onClick={() => setRegisterMode(true)} className="text-sm text-emerald-600 hover:underline">Don't have an account? Create one</button>
+          <button type="button" onClick={onBack} className="text-sm text-slate-500 hover:text-slate-800 transition-colors">Back to portal</button>
           <p className="text-sm text-slate-600 font-medium">🔒 Authorized admin access only</p>
         </div>
       </div>
