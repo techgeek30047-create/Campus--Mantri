@@ -263,9 +263,10 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
             const mantriById: Record<string, any> = {};
             (mantrisMap || []).forEach((m: any) => { mantriById[m.id] = m; });
 
-            const enrichedData = fetchedLeaderboard.map((entry: any) => ({
+            const enrichedData = fetchedLeaderboard.map((entry: any, index: number) => ({
               ...entry,
-              campus_mantris: mantriById[entry.mantri_id] || null
+              campus_mantris: mantriById[entry.mantri_id] || null,
+              rank_position: index + 1
             }));
 
             setLeaderboard(enrichedData);
