@@ -433,8 +433,7 @@ setStats({
     // ✅ 2. Backend RPC (background me chalega) — include approver
     const { error } = await supabase.rpc('approve_submission', {
       submission_id: submissionId,
-      points_value: points,
-      approver_id: currentAdmin?.id ?? null
+      points_value: points
     });
 
     if (error) {
