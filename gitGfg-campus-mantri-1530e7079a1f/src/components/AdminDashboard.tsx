@@ -431,7 +431,7 @@ setStats({
   );
 
   try {
-    // ✅ 2. Backend RPC (background me chalega) — include approver
+    // ✅ 2. Backend RPC for approval and leaderboard sync
     const { error } = await supabase.rpc('approve_submission', {
       submission_id: submissionId,
       points_value: points
@@ -439,16 +439,27 @@ setStats({
 
     if (error) {
       console.error('Approve failed:', error);
-      // rollback only if backend fails
-      fetchDashboardData();
-    } else {
-      // ✅ 3. Refresh leaderboard if it's currently being viewed
-      if (currentView === 'leaderboard') {
-        // Small delay to ensure DB has synced
-        setTimeout(() => {
-          fetchDashboardData();
-        }, 500);
+
+      // Fallback to a direct update if RPC is unavailable or misconfigured
+      const { error: updateError } = await supabase
+        .from('task_submissions')
+        .update({
+          status: 'approved',
+          points_awarded: points,
+          admin_feedback: 'Task approved successfully!'
+        })
+        .eq('id', submissionId);
+
+      if (updateError) {
+        console.error('Approve fallback failed:', updateError);
+        fetchDashboardData();
+        return;
       }
+    }
+
+    await fetchSubmissions();
+    if (currentView === 'leaderboard') {
+      await fetchDashboardData();
     }
   } catch (err) {
     console.error('Approve error:', err);
@@ -478,24 +489,25 @@ setStats({
   );
 
   try {
-    // ✅ 2. Backend update using the update_submission_status function for leaderboard sync
-    const { error } = await supabase.rpc('update_submission_status', {
-      submission_id: submissionId,
-      new_status: 'rejected',
-      approver_id: currentAdmin?.id ?? null
-    });
+    // ✅ 2. Backend update via direct table update (avoid missing RPC function)
+    const { error } = await supabase
+      .from('task_submissions')
+      .update({
+        status: 'rejected',
+        admin_feedback: feedback || 'Task needs improvement. Please resubmit.',
+        points_awarded: 0
+      })
+      .eq('id', submissionId);
 
     if (error) {
       console.error('Reject failed:', error);
-      // rollback only if backend fails
       fetchDashboardData();
-    } else {
-      // ✅ 3. Refresh leaderboard if it's currently being viewed
-      if (currentView === 'leaderboard') {
-        setTimeout(() => {
-          fetchDashboardData();
-        }, 500);
-      }
+      return;
+    }
+
+    await fetchSubmissions();
+    if (currentView === 'leaderboard') {
+      await fetchDashboardData();
     }
   } catch (err) {
     console.error('Reject error:', err);
