@@ -4,58 +4,61 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// ⚠️ DO NOT crash production build if env missing
+// Validate environment variables
 if (!supabaseUrl || !supabaseKey) {
-  console.warn('⚠️ Supabase environment variables missing.');
-  console.warn('Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel.');
+  console.error('❌ Missing Supabase environment variables');
+  console.error('Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env file');
+  throw new Error('Missing Supabase configuration');
 }
 
-// Create Supabase client (safe fallback)
-export const supabase = createClient(
-  supabaseUrl || '',
-  supabaseKey || '',
-  {
-    db: { schema: 'public' },
-    global: {
-      headers: {
-        'X-Client-Info': 'GeeksforGeeks-Campus-Mantri-Task-Tracker',
-        'X-Project-ID': 'bozmdglkyampbceqgsyi'
-      }
+
+// Create Supabase client with environment variables
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  db: {
+    schema: 'public'
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'GeeksforGeeks-Campus-Mantri-Task-Tracker',
+      'X-Project-ID': 'bozmdglkyampbceqgsyi'
     }
   }
-);
+});
 
-// ✅ Connection test (FIXED)
+// Test Supabase connection
 export const testSupabaseConnection = async (): Promise<boolean> => {
   try {
-    const res = await supabase
+    
+    // Test basic connection to your campus_mantris table
+    const { data, error } = await supabase
       .from('campus_mantris')
-      .select('*')
+      .select('count')
       .limit(1);
 
-    if (res && res.error) {
-      console.error('Database connection failed:', res.error);
+    if (error) {
+      console.error('❌ Database connection failed:', error.message);
       return false;
     }
 
     return true;
-  } catch (err) {
-    console.error('Database connection error:', err);
+  } catch (error) {
+    console.error('❌ Database connection error:', error);
     return false;
   }
 };
 
-// ✅ Availability check
-export const isSupabaseAvailable = () =>
-  !!supabaseUrl && !!supabaseKey;
+// Initialize connection test
+testSupabaseConnection().then(connected => {
+  if (connected) {
+  } else {
+    console.warn('⚠️ Database connection issues detected');
+  }
+});
 
-// ✅ Alias
-export const isSupabaseConfigured = isSupabaseAvailable;
+// Export connection status checker
+export const isSupabaseAvailable = () => !!supabase;
 
-/* ===========================
-   TYPES
-=========================== */
-
+// Type definitions for your database schema
 export type CampusMantri = {
   id: string;
   name: string;
@@ -71,19 +74,23 @@ export type CampusMantri = {
   approved_tasks?: number;
 };
 
+export type Admin = {
+  id: string;
+  username?: string;
+  name?: string;
+  email?: string;
+  is_super?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type Task = {
   id: string;
   title: string;
   description?: string;
   assigned_to: string;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  priority:
-    | 'low'
-    | 'medium'
-    | 'high'
-    | 'urgent'
-    | 'critical'
-    | string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
   due_date?: string;
   completed_at?: string;
   created_at: string;
@@ -96,19 +103,8 @@ export type AdminTask = {
   description?: string;
   assigned_to?: string;
   due_date: string;
-  priority:
-    | 'task_1'
-    | 'task_2'
-    | 'task_3'
-    | 'task_4'
-    | 'task_5'
-    | 'task_6'
-    | 'low'
-    | 'medium'
-    | 'high'
-    | 'urgent'
-    | 'critical'
-    | string;
+  priority: 'level_1' | 'level_2' | 'level_3' | 'level_4' | 'level_5' | 'level_6' | 'low' | 'medium' | 'high' | 'urgent';
+  points?: number;
   status: 'active' | 'completed' | 'cancelled';
   created_by_admin: boolean;
   created_at: string;
@@ -161,7 +157,7 @@ export type PerformanceMetrics = {
   created_at: string;
 };
 
-// ✅ Safe wrapper (NO CHANGE NEEDED)
+// Safe database operations with error handling
 export const safeSupabaseOperation = async <T>(
   operation: () => Promise<{ data: T | null; error: any }>
 ): Promise<{ data: T | null; error: any }> => {
@@ -171,12 +167,7 @@ export const safeSupabaseOperation = async <T>(
     console.error('Database operation failed:', error);
     return {
       data: null,
-      error: {
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Database operation failed'
-      }
+      error: { message: error instanceof Error ? error.message : 'Database operation failed' }
     };
   }
 };
