@@ -57,6 +57,7 @@ testSupabaseConnection().then(connected => {
 
 // Export connection status checker
 export const isSupabaseAvailable = () => !!supabase;
+export const isSupabaseConfigured = isSupabaseAvailable;
 
 // Type definitions for your database schema
 export type CampusMantri = {
