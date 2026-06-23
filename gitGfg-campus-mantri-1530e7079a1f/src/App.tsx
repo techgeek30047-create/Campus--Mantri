@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // Lazy load components to prevent loading issues
 const AuthWrapper = React.lazy(() => import('./components/AuthWrapper'));
 const AdminLogin = React.lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 const DatabaseConnectionTest = React.lazy(() => import('./components/DatabaseConnectionTest'));
+const CertificateGenerator = React.lazy(() => import('./components/CertificateGenerator'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -60,40 +60,133 @@ class ErrorBoundary extends React.Component<
 }
 
 function App() {
-  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [currentView, setCurrentView] = useState<'portal' | 'admin' | 'login' | 'dbtest' | 'certificate'>('portal');
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
+    return localStorage.getItem('adminAuthenticated') === 'true';
+  });
+  const [currentAdmin, setCurrentAdmin] = useState<any | null>(() => {
+    const stored = localStorage.getItem('adminUser');
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
-
-  // Expose admin open helpers
+  
+  // Check URL for admin access or certificate generator route
   useEffect(() => {
     try {
-      (window as any).openAdminPanel = () => navigate('/admin/login');
-      (window as any).openDatabaseTest = () => navigate('/dbtest');
+      const checkRoute = () => {
+        const path = window.location.pathname;
+        const hash = window.location.hash;
+
+        if (path === '/admin' || path.startsWith('/admin') || hash === '#admin' || hash.includes('admin')) {
+          if (localStorage.getItem('adminAuthenticated') === 'true') {
+            setCurrentView('admin');
+          } else {
+            setCurrentView('login');
+          }
+        } else if (path === '/dbtest' || path.startsWith('/dbtest') || hash === '#dbtest' || hash.includes('dbtest')) {
+          setCurrentView('dbtest');
+        } else if (path === '/certificate' || path.startsWith('/certificate') || hash === '#certificate' || hash.includes('certificate')) {
+          setCurrentView('certificate');
+        } else {
+          setCurrentView('portal');
+        }
+      };
+      
+      checkRoute();
+      
+      const handleHashChange = () => {
+        checkRoute();
+      };
+      
+      const handlePopState = () => {
+        checkRoute();
+      };
+      
+      window.addEventListener('hashchange', handleHashChange);
+      window.addEventListener('popstate', handlePopState);
+      
+      return () => {
+        window.removeEventListener('hashchange', handleHashChange);
+        window.removeEventListener('popstate', handlePopState);
+      };
+    } catch (err) {
+      console.error('Error in useEffect:', err);
+      setError('Failed to initialize application');
+    }
+  }, []);
+
+  // Handle database test access
+  const handleDatabaseTest = () => {
+    try {
+      setCurrentView('dbtest');
+      window.history.pushState({}, '', '/dbtest');
+    } catch (err) {
+      console.error('Error accessing database test:', err);
+    }
+  };
+
+  // Handle certificate generator access from anywhere in the app
+  const handleCertificateAccess = () => {
+    try {
+      setCurrentView('certificate');
+      window.history.pushState({}, '', '/certificate');
+    } catch (err) {
+      console.error('Error accessing certificate generator:', err);
+    }
+  };
+
+  // Handle admin access from anywhere in the app
+  const handleAdminAccess = () => {
+    try {
+      setCurrentView('login');
+      window.history.pushState({}, '', '/admin');
+    } catch (err) {
+      console.error('Error accessing admin:', err);
+    }
+  };
+
+  // Expose admin access globally
+  useEffect(() => {
+    try {
+      (window as any).openAdminPanel = handleAdminAccess;
+      (window as any).openDatabaseTest = handleDatabaseTest;
+      (window as any).openCertificateGenerator = handleCertificateAccess;
     } catch (err) {
       console.error('Error setting up admin access:', err);
     }
-  }, [navigate]);
+  }, []);
 
-  const handleAdminLogin = () => {
+  const handleAdminLogin = (adminData: any) => {
     try {
+      localStorage.setItem('adminAuthenticated', 'true');
+      localStorage.setItem('adminUser', JSON.stringify(adminData));
       setLoading(true);
-      setTimeout(() => {
-        setIsAdminAuthenticated(true);
-        setLoading(false);
-        navigate('/admin');
-      }, 500);
+      setCurrentAdmin(adminData);
+      setIsAdminAuthenticated(true);
+      setCurrentView('admin');
+      window.history.pushState({}, '', '/admin');
     } catch (err) {
       console.error('Error during admin login:', err);
       setError('Failed to login to admin panel');
+    } finally {
       setLoading(false);
     }
   };
 
   const handleLogout = () => {
     try {
+      localStorage.removeItem('adminAuthenticated');
+      localStorage.removeItem('adminUser');
       setIsAdminAuthenticated(false);
-      navigate('/');
+      setCurrentAdmin(null);
+      setCurrentView('portal');
+      window.history.pushState({}, '', '/');
     } catch (err) {
       console.error('Error during logout:', err);
     }
@@ -116,19 +209,28 @@ function App() {
     );
   }
 
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   try {
     return (
       <ErrorBoundary>
         <div className="min-h-screen bg-gray-50">
           <React.Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/" element={<AuthWrapper />} />
-              <Route path="/admin/login" element={<AdminLogin onLogin={handleAdminLogin} onBack={() => navigate('/')} />} />
-              <Route path="/admin" element={isAdminAuthenticated ? <AdminDashboard onLogout={handleLogout} /> : <Navigate to="/admin/login" replace />} />
-              <Route path="/dbtest" element={<DatabaseConnectionTest />} />
-              {/* Fallback to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+            {currentView === 'portal' && <AuthWrapper />}
+            {currentView === 'login' && (
+              <AdminLogin onLogin={handleAdminLogin} onBack={() => setCurrentView('portal')} />
+            )}
+            {currentView === 'admin' && localStorage.getItem('adminAuthenticated') === 'true' && (
+              <AdminDashboard onLogout={handleLogout} currentAdmin={currentAdmin} />
+            )}
+            {currentView === 'dbtest' && (
+              <DatabaseConnectionTest />
+            )}
+            {currentView === 'certificate' && (
+              <CertificateGenerator />
+            )}
           </React.Suspense>
         </div>
       </ErrorBoundary>
@@ -144,7 +246,7 @@ function App() {
             onClick={() => window.location.reload()}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
-            Refresh Application
+            Reload Application
           </button>
         </div>
       </div>
