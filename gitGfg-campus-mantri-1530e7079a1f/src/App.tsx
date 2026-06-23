@@ -245,7 +245,13 @@ function App() {
           <React.Suspense fallback={<LoadingSpinner />}>
             {currentView === 'portal' && <AuthWrapper />}
             {currentView === 'login' && (
-              <AdminLogin onLogin={handleAdminLogin} onBack={() => setCurrentView('portal')} />
+              <AdminLogin
+                onLogin={handleAdminLogin}
+                onBack={() => {
+                  setCurrentView('portal');
+                  window.history.pushState({}, '', '/');
+                }}
+              />
             )}
             {currentView === 'admin' && isAdminAuthenticated && (
               <AdminDashboard onLogout={handleLogout} currentAdmin={currentAdmin} />
