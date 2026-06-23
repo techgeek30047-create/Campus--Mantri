@@ -55,17 +55,17 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
 
       let valid = false;
       try {
-        if (adminData.password_hash) {
-          valid = bcrypt.compareSync(credentials.password, adminData.password_hash);
-        } else {
-          // legacy plaintext fallback
-          valid = adminData.password === credentials.password;
-        }
+        console.log('Admin Data:', adminData);
+        console.log('Entered Password:', credentials.password);
+        console.log('Stored Hash:', adminData.password_hash);
+        valid = bcrypt.compareSync(credentials.password, adminData.password_hash);
+        console.log('Password Valid:', valid);
       } catch (e) {
         console.error('Password check error:', e);
       }
 
       if (!valid) {
+        console.log('PASSWORD MISMATCH');
         setError('Invalid admin credentials');
         setLoading(false);
         return;
