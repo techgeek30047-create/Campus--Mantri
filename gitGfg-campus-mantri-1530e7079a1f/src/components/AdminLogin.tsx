@@ -55,15 +55,17 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         return;
       }
 
+      console.log("Entered:", credentials.password);
+      console.log("Stored Hash:", storedHash);
       let valid = false;
       try {
-        if (adminData.password_hash) {
-          valid = await bcrypt.compare(credentials.password, adminData.password_hash);
-        } else {
-          valid = adminData.password === credentials.password;
-        }
+        valid = await bcrypt.compare(
+          credentials.password,
+          storedHash
+        );
+        console.log("VALID:", valid);
       } catch (e) {
-        console.error('Password check error:', e);
+        console.error(e);
       }
 
       if (!valid) {
