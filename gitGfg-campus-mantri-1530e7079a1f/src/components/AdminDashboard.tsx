@@ -583,6 +583,9 @@ setStats({
   const fetchAdminStats = async () => {
     try {
       const { data: adminsData } = await supabase.from('admins').select('*').order('created_at', { ascending: false });
+      console.log('ADMIN SESSION', localStorage.getItem('adminSession'));
+      const { data } = await supabase.auth.getSession();
+      console.log('SUPABASE SESSION', data.session);
       const approvals = await fetchAllRows('admin_approvals', '*');
       const { data: loginsData } = await supabase.from('admin_logins').select('*').order('logged_in_at', { ascending: false });
 
