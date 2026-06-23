@@ -31,13 +31,15 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
     }
 
     try {
+      console.log("USERNAME:", credentials.username.trim());
       // Lookup admin in DB
       const { data: adminData, error: adminErr } = await supabase
         .from('admins')
         .select('*')
         .eq('username', credentials.username.trim())
-        .limit(1)
         .single();
+      console.log("ADMIN DATA:", adminData);
+      console.log("ADMIN ERROR:", adminErr);
 
       if (adminErr || !adminData) {
         setError('Invalid admin credentials');
