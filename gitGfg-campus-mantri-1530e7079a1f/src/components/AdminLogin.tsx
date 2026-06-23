@@ -64,6 +64,31 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         }
       }
 
+      if (!authenticated && adminData.password) {
+        authenticated = adminData.password === credentials.password;
+      }
+
+      if (!authenticated && adminData.auth_user_id) {
+        const { data: authUser, error: authUserError } = await supabase
+          .from('auth_users')
+          .select('*')
+          .eq('id', adminData.auth_user_id)
+          .maybeSingle();
+
+        if (!authUserError && authUser) {
+          if (authUser.password_hash) {
+            const passwordValid = await bcrypt.compare(credentials.password, authUser.password_hash);
+            if (passwordValid) authenticated = true;
+          } else if (authUser.email) {
+            const { error: authError } = await supabase.auth.signInWithPassword({
+              email: authUser.email,
+              password: credentials.password
+            });
+            if (!authError) authenticated = true;
+          }
+        }
+      }
+
       if (!authenticated) {
         setError('Invalid admin credentials');
         setLoading(false);
