@@ -1,7 +1,7 @@
 import { Eye, EyeOff, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs'; console.log(bcrypt.hashSync('GFG@2026#Admin', 12));
 
 interface AdminLoginProps {
   onLogin: (admin: any) => void;
