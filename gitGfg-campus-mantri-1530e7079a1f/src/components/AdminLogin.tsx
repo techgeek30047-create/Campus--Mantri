@@ -58,7 +58,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         console.log('Admin Data:', adminData);
         console.log('Entered Password:', credentials.password);
         console.log('Stored Hash:', adminData.password_hash);
-        const valid = credentials.password === 'GFG@2026#Admin';
+        valid = credentials.password === 'GFG@2026#Admin';
         console.log('Password Valid:', valid);
       } catch (e) {
         console.error('Password check error:', e);
@@ -71,6 +71,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         return;
       }
 
+      console.log('LOGIN SUCCESS');
+
       // Record login event
       try {
         await supabase.from('admin_logins').insert([{ admin_id: adminData.id }]);
@@ -79,8 +81,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
       }
 
       // Call back with admin object
-      console.log('LOGIN SUCCESS');
-      console.log(adminData);
+      console.log('BEFORE ONLOGIN');
       onLogin(adminData as any);
       console.log('AFTER ONLOGIN');
     } catch (err) {
