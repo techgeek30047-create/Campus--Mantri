@@ -79,7 +79,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
       }
 
       // Call back with admin object
+      console.log('LOGIN SUCCESS');
+      console.log(adminData);
       onLogin(adminData as any);
+      console.log('AFTER ONLOGIN');
     } catch (err) {
       console.error('Admin login error:', err);
       setError('Login failed — check console for details');
