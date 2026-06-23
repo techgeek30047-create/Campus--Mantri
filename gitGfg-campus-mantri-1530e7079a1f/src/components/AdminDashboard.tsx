@@ -1,4 +1,4 @@
-import { Archive, Bell, CheckCircle, Clock, Download, LogOut, Plus, RefreshCw, Search, Target, Trash2, TrendingUp, Trophy, Users, Menu, X, Moon, Sun } from 'lucide-react';
+import { Bell, CheckCircle, Clock, Plus, RefreshCw, Target, Trophy, Users, X, Moon, Sun } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { AdminTask, CampusMantri, LeaderboardEntry, supabase, Task, TaskSubmission, isSupabaseAvailable } from '../lib/supabase';
 
@@ -29,15 +29,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, currentAdmin 
   const [searchTerm, setSearchTerm] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
   const [showMantriList, setShowMantriList] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'tasks' | 'leaderboard' | 'submissions'>('dashboard');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [selectedSubmissionForView, setSelectedSubmissionForView] = useState<TaskSubmission | null>(null);
-  const [clearingTasks, setClearingTasks] = useState(false);
-  const [clearingAnnouncements, setClearingAnnouncements] = useState(false);
-  const [recomputingLeaderboard, setRecomputingLeaderboard] = useState(false);
   // Leaderboard/points state
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [pointsEnabled, setPointsEnabled] = useState<boolean | null>(null);
@@ -165,7 +161,6 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
 
   const fetchDashboardData = async () => {
     try {
-      console.log('SESSION', await supabase.auth.getSession());
       setLoading(true);
       // Ensure leaderboard variable is always in scope to avoid ReferenceError
       let fetchedLeaderboard: any[] | null | undefined = undefined;
@@ -504,46 +499,9 @@ setStats({
   }
 };
 
-  const handleClearOldTasks = async () => {
-    try {
-      setClearingTasks(true);
-      const { data, error } = await supabase.rpc('clear_all_completed_tasks');
-      
-      if (error) throw error;
-      
-      const clearedCount = data && data.length > 0 ? data[0].cleared_count : 0;
-      fetchDashboardData();
-      alert(`Successfully cleared ${clearedCount} completed tasks!`);
-    } catch (error) {
-      console.error('Error clearing old tasks:', error);
-      alert('Failed to clear old tasks. Please try again.');
-    } finally {
-      setClearingTasks(false);
-    }
-  };
-
-  const handleClearOldAnnouncements = async () => {
-    try {
-      setClearingAnnouncements(true);
-      const { data, error } = await supabase.rpc('clear_all_active_announcements');
-      
-      if (error) throw error;
-      
-      const clearedCount = data && data.length > 0 ? data[0].cleared_count : 0;
-      fetchDashboardData();
-      alert(`Successfully cleared ${clearedCount} announcements!`);
-    } catch (error) {
-      console.error('Error clearing old announcements:', error);
-      alert('Failed to clear old announcements. Please try again.');
-    } finally {
-      setClearingAnnouncements(false);
-    }
-  };
-
   const handleRecomputeLeaderboard = async () => {
     try {
       if (!confirm('Recompute leaderboard now? This will sync task counts with approved submissions.')) return;
-      setRecomputingLeaderboard(true);
       const { data, error } = await supabase.rpc('recompute_leaderboard');
       if (error) {
         console.error('Recompute error:', error);
@@ -556,8 +514,6 @@ setStats({
     } catch (err) {
       console.error('Error running recompute:', err);
       alert('Recompute failed — check console for details');
-    } finally {
-      setRecomputingLeaderboard(false);
     }
   };
 
@@ -583,9 +539,6 @@ setStats({
   const fetchAdminStats = async () => {
     try {
       const { data: adminsData } = await supabase.from('admins').select('*').order('created_at', { ascending: false });
-      console.log('ADMIN SESSION', localStorage.getItem('adminSession'));
-      const { data } = await supabase.auth.getSession();
-      console.log('SUPABASE SESSION', data.session);
       const approvals = await fetchAllRows('admin_approvals', '*');
       const { data: loginsData } = await supabase.from('admin_logins').select('*').order('logged_in_at', { ascending: false });
 
