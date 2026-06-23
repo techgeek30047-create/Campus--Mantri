@@ -249,7 +249,7 @@ function App() {
                 onLogin={handleAdminLogin}
                 onBack={() => {
                   setCurrentView('portal');
-                  window.history.pushState({}, '', '/');
+                  window.location.href = '/';
                 }}
               />
             )}
