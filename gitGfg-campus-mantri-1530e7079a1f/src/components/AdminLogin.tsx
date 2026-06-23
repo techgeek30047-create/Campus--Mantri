@@ -1,7 +1,7 @@
 import { Eye, EyeOff, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import bcrypt from 'bcryptjs'; console.log(bcrypt.hashSync('GFG@2026#Admin', 12));
+import bcrypt from 'bcryptjs';
 
 interface AdminLoginProps {
   onLogin: (admin: any) => void;
@@ -55,23 +55,20 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
 
       let valid = false;
       try {
-        console.log('Admin Data:', adminData);
-        console.log('Entered Password:', credentials.password);
-        console.log('Stored Hash:', adminData.password_hash);
-        valid = credentials.password === 'GFG@2026#Admin';
-        console.log('Password Valid:', valid);
+        if (adminData.password_hash) {
+          valid = await bcrypt.compare(credentials.password, adminData.password_hash);
+        } else {
+          valid = adminData.password === credentials.password;
+        }
       } catch (e) {
         console.error('Password check error:', e);
       }
 
       if (!valid) {
-        console.log('PASSWORD MISMATCH');
         setError('Invalid admin credentials');
         setLoading(false);
         return;
       }
-
-      console.log('LOGIN SUCCESS');
 
       // Record login event
       try {
@@ -80,10 +77,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         console.warn('Failed to record admin login:', logErr);
       }
 
-      // Call back with admin object
-      console.log('BEFORE ONLOGIN');
       onLogin(adminData as any);
-      console.log('AFTER ONLOGIN');
     } catch (err) {
       console.error('Admin login error:', err);
       setError('Login failed — check console for details');
