@@ -202,6 +202,10 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
 
       if (adminTasksError) console.error('Admin tasks error:', adminTasksError);
       console.log('Admin tasks data:', adminTasksData);
+      console.log('MANTRIS:', mantrisData);
+      console.log('TASKS:', tasksData);
+      console.log('ADMIN TASKS:', adminTasksData);
+      console.log('CURRENT VIEW:', currentView);
 
       // Fetch task submissions with proof
       // 🔹 Fetch task submissions (PAGINATED)
@@ -305,9 +309,11 @@ if (currentView !== 'leaderboard' && (!fetchedLeaderboard || fetchedLeaderboard.
 }
 
 // Fetch exact total count (Supabase returns a 1,000 row cap by default)
-const { count: exactCount } = await supabase
+const { count: exactCount, error: countError } = await supabase
   .from('campus_mantris')
   .select('*', { count: 'exact', head: true });
+console.log('COUNT:', exactCount);
+console.log('COUNT ERROR:', countError);
 
 const totalMantrisCount = typeof exactCount === 'number' ? exactCount : ((mantrisData && mantrisData.length) || 0);
 
