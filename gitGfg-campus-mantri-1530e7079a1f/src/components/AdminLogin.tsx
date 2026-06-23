@@ -1,7 +1,6 @@
 import { Eye, EyeOff, Shield } from 'lucide-react';
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import bcrypt from 'bcryptjs';
 
 interface AdminLoginProps {
   onLogin: (admin: any) => void;
@@ -31,50 +30,30 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
     }
 
     try {
-      console.log("USERNAME:", credentials.username.trim());
       // Lookup admin in DB
       const { data: adminData, error: adminErr } = await supabase
         .from('admins')
         .select('*')
         .eq('username', credentials.username.trim())
         .single();
-      console.log("ADMIN DATA:", adminData);
-      console.log("ADMIN ERROR:", adminErr);
 
-      if (adminErr || !adminData) {
+      if (adminErr || !adminData || !adminData.email) {
         setError('Invalid admin credentials');
         setLoading(false);
         return;
       }
 
-      // Support both plaintext password (legacy) and hashed password (password_hash)
-      const storedHash = adminData.password_hash || adminData.password || null;
-      if (!storedHash) {
-        setError('Invalid admin credentials');
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: adminData.email,
+        password: credentials.password
+      });
+
+      if (authError) {
+        setError(authError.message || 'Invalid admin credentials');
         setLoading(false);
         return;
       }
 
-      console.log("Entered:", credentials.password);
-      console.log("Stored Hash:", storedHash);
-      let valid = false;
-      try {
-        valid = await bcrypt.compare(
-          credentials.password,
-          storedHash
-        );
-        console.log("VALID:", valid);
-      } catch (e) {
-        console.error(e);
-      }
-
-      if (!valid) {
-        setError('Invalid admin credentials');
-        setLoading(false);
-        return;
-      }
-
-      // Record login event
       try {
         await supabase.from('admin_logins').insert([{ admin_id: adminData.id }]);
       } catch (logErr) {
