@@ -164,9 +164,6 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
 
 
   const fetchDashboardData = async () => {
-    const { data } = await supabase.auth.getSession();
-    console.log('SESSION CHECK', data.session);
-
     try {
       setLoading(true);
       // Ensure leaderboard variable is always in scope to avoid ReferenceError
@@ -583,9 +580,6 @@ setStats({
   };
 
   const fetchAdminStats = async () => {
-    const { data } = await supabase.auth.getSession();
-    console.log('ADMIN SESSION', data.session);
-
     try {
       const { data: adminsData } = await supabase.from('admins').select('*').order('created_at', { ascending: false });
       const approvals = await fetchAllRows('admin_approvals', '*');
