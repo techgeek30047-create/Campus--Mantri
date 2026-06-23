@@ -5,7 +5,6 @@ const AuthWrapper = React.lazy(() => import('./components/AuthWrapper'));
 const AdminLogin = React.lazy(() => import('./components/AdminLogin'));
 const AdminDashboard = React.lazy(() => import('./components/AdminDashboard'));
 const DatabaseConnectionTest = React.lazy(() => import('./components/DatabaseConnectionTest'));
-const CertificateGenerator = React.lazy(() => import('./components/CertificateGenerator'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -91,8 +90,6 @@ function App() {
           }
         } else if (path === '/dbtest' || path.startsWith('/dbtest') || hash === '#dbtest' || hash.includes('dbtest')) {
           setCurrentView('dbtest');
-        } else if (path === '/certificate' || path.startsWith('/certificate') || hash === '#certificate' || hash.includes('certificate')) {
-          setCurrentView('certificate');
         } else {
           setCurrentView('portal');
         }
@@ -134,8 +131,8 @@ function App() {
   // Handle certificate generator access from anywhere in the app
   const handleCertificateAccess = () => {
     try {
-      setCurrentView('certificate');
-      window.history.pushState({}, '', '/certificate');
+      setCurrentView('portal');
+      window.history.pushState({}, '', '/');
     } catch (err) {
       console.error('Error accessing certificate generator:', err);
     }
@@ -156,7 +153,6 @@ function App() {
     try {
       (window as any).openAdminPanel = handleAdminAccess;
       (window as any).openDatabaseTest = handleDatabaseTest;
-      (window as any).openCertificateGenerator = handleCertificateAccess;
     } catch (err) {
       console.error('Error setting up admin access:', err);
     }
@@ -227,9 +223,6 @@ function App() {
             )}
             {currentView === 'dbtest' && (
               <DatabaseConnectionTest />
-            )}
-            {currentView === 'certificate' && (
-              <CertificateGenerator />
             )}
           </React.Suspense>
         </div>
