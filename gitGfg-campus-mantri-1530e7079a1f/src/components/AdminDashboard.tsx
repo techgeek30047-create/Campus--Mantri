@@ -165,6 +165,7 @@ const [totalSubmissions, setTotalSubmissions] = useState(0);
 
   const fetchDashboardData = async () => {
     try {
+      console.log('SESSION', await supabase.auth.getSession());
       setLoading(true);
       // Ensure leaderboard variable is always in scope to avoid ReferenceError
       let fetchedLeaderboard: any[] | null | undefined = undefined;
