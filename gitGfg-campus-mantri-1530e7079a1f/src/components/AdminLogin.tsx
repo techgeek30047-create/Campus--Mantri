@@ -39,12 +39,14 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         .single();
 
       if (adminErr || !adminData) {
+        console.warn('Admin lookup failed', { adminErr, username: credentials.username.trim() });
         setError('Invalid admin credentials');
         setLoading(false);
         return;
       }
 
       let authenticated = false;
+      console.debug('Admin login candidate', { adminData });
 
       if (adminData.email) {
         const { error: authError } = await supabase.auth.signInWithPassword({
@@ -54,6 +56,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
 
         if (!authError) {
           authenticated = true;
+        } else {
+          console.warn('Supabase auth failed for admin email', { authError, email: adminData.email });
         }
       }
 
@@ -61,6 +65,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         const passwordValid = await bcrypt.compare(credentials.password, adminData.password_hash);
         if (passwordValid) {
           authenticated = true;
+        } else {
+          console.warn('Admin password_hash compare failed');
         }
       }
 
@@ -86,6 +92,8 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
             });
             if (!authError) authenticated = true;
           }
+        } else {
+          console.warn('Admin auth_user_id lookup failed', { authUserError, auth_user_id: adminData.auth_user_id });
         }
       }
 
