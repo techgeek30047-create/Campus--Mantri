@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 
 // Lazy load components to prevent loading issues
 const AuthWrapper = React.lazy(() => import('./components/AuthWrapper'));
@@ -75,6 +76,31 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  useEffect(() => {
+    const validateStoredAdminSession = async () => {
+      try {
+        const storedAuthenticated = localStorage.getItem('adminAuthenticated') === 'true';
+        if (!storedAuthenticated) return;
+
+        const { data } = await supabase.auth.getSession();
+        if (!data?.session) {
+          localStorage.removeItem('adminAuthenticated');
+          localStorage.removeItem('adminUser');
+          setIsAdminAuthenticated(false);
+          setCurrentAdmin(null);
+          if (currentView === 'admin') {
+            setCurrentView('login');
+            window.history.pushState({}, '', '/admin');
+          }
+        }
+      } catch (err) {
+        console.error('Admin session validation error:', err);
+      }
+    };
+
+    validateStoredAdminSession();
+  }, [currentView]);
+
   // Check URL for admin access or certificate generator route
   useEffect(() => {
     try {
@@ -175,8 +201,11 @@ function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
+      if (supabase.auth?.signOut) {
+        await supabase.auth.signOut();
+      }
       localStorage.removeItem('adminAuthenticated');
       localStorage.removeItem('adminUser');
       setIsAdminAuthenticated(false);
@@ -218,7 +247,7 @@ function App() {
             {currentView === 'login' && (
               <AdminLogin onLogin={handleAdminLogin} onBack={() => setCurrentView('portal')} />
             )}
-            {currentView === 'admin' && localStorage.getItem('adminAuthenticated') === 'true' && (
+            {currentView === 'admin' && isAdminAuthenticated && (
               <AdminDashboard onLogout={handleLogout} currentAdmin={currentAdmin} />
             )}
             {currentView === 'dbtest' && (
