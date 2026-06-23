@@ -1,4 +1,5 @@
 import { Eye, EyeOff, Shield } from 'lucide-react';
+import bcrypt from 'bcryptjs';
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
@@ -37,19 +38,34 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
         .eq('username', credentials.username.trim())
         .single();
 
-      if (adminErr || !adminData || !adminData.email) {
+      if (adminErr || !adminData) {
         setError('Invalid admin credentials');
         setLoading(false);
         return;
       }
 
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: adminData.email,
-        password: credentials.password
-      });
+      let authenticated = false;
 
-      if (authError) {
-        setError(authError.message || 'Invalid admin credentials');
+      if (adminData.email) {
+        const { error: authError } = await supabase.auth.signInWithPassword({
+          email: adminData.email,
+          password: credentials.password
+        });
+
+        if (!authError) {
+          authenticated = true;
+        }
+      }
+
+      if (!authenticated && adminData.password_hash) {
+        const passwordValid = await bcrypt.compare(credentials.password, adminData.password_hash);
+        if (passwordValid) {
+          authenticated = true;
+        }
+      }
+
+      if (!authenticated) {
+        setError('Invalid admin credentials');
         setLoading(false);
         return;
       }
