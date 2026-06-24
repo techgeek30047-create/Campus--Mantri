@@ -18,17 +18,20 @@ const AuthWrapper: React.FC = () => {
     const initializeApp = async () => {
       try {
         // Test database connection first
-        const isConnected = await testSupabaseConnection();
+        const result = await testSupabaseConnection();
 
         // If not connected and env vars are missing, show a helpful banner instead of a blocking error
-        if (!isConnected && !isSupabaseConfigured) {
+        if (!result.connected && !isSupabaseConfigured) {
           setConfigMissing(true);
           setLoading(false);
           return;
         }
 
-        if (!isConnected) {
-          setConnectionError('Unable to connect to database. Please check your internet connection and try again.');
+        if (!result.connected) {
+          const errorMessage = result.error || 'Unable to connect to database. Please check your internet connection and try again.';
+          setConnectionError(errorMessage.includes('Invalid API key')
+            ? 'Invalid Supabase API key. Check VITE_SUPABASE_ANON_KEY.'
+            : errorMessage);
           setLoading(false);
           return;
         }
