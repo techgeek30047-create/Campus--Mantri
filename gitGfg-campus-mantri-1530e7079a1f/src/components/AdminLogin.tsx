@@ -1,7 +1,7 @@
 import { Eye, EyeOff, Shield } from 'lucide-react';
 import bcrypt from 'bcryptjs';
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 interface AdminLoginProps {
   onLogin: (admin: any) => void;
@@ -31,76 +31,135 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, onBack }) => {
     }
 
     try {
-      // Lookup admin in DB
-      const { data: adminData, error: adminErr } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('username', credentials.username.trim())
-        .single();
+      let adminData = null;
+      let isOfflineFallback = false;
 
-      if (adminErr || !adminData) {
-        console.warn('Admin lookup failed', { adminErr, username: credentials.username.trim() });
+      // Try to lookup admin in Supabase DB
+      if (isSupabaseConfigured) {
+        const { data: supData, error: adminErr } = await supabase
+          .from('admins')
+          .select('*')
+          .eq('username', credentials.username.trim())
+          .maybeSingle();
+
+        if (!adminErr && supData) {
+          adminData = supData;
+        } else if (adminErr) {
+          const message = String(adminErr.message || '').toLowerCase();
+          // If table doesn't exist or is empty, fall through to offline lookup
+          if (message.includes('does not exist') || message.includes('0 rows') || message.includes('pgrst116')) {
+            console.warn('Admins table empty or unavailable; using offline auth');
+          } else if (message.includes('failed to fetch') || message.includes('enotfound') || message.includes('dns') || message.includes('networkerror')) {
+            setError(`Supabase connection failed: ${adminErr.message}`);
+            setLoading(false);
+            return;
+          } else {
+            console.warn('Admin lookup error', { adminErr });
+          }
+        }
+      }
+
+      // Fallback: check offline default admin (for development)
+      if (!adminData && credentials.username.trim() === 'shivam0754' && credentials.password === 'Shivam@9589') {
+        adminData = {
+          id: 'admin-offline-1',
+          username: 'shivam0754',
+          name: 'Shivam Admin',
+          email: 'shivam0754@campusmantri.local',
+          password: 'Shivam@9589',  // Plain password for offline fallback
+          is_super: true,
+          created_at: new Date().toISOString()
+        };
+        isOfflineFallback = true;
+      }
+
+      if (!adminData) {
         setError('Invalid admin credentials');
         setLoading(false);
         return;
       }
 
       let authenticated = false;
-      console.debug('Admin login candidate', { adminData });
+      let authFailureReason = '';
+      let localAuthFallback = false;
+      console.debug('Admin login candidate', { adminData, isOfflineFallback });
 
-      if (adminData.email) {
-        const { error: authError } = await supabase.auth.signInWithPassword({
+      // Only try Supabase auth if NOT using offline fallback
+      if (!isOfflineFallback && adminData.email && isSupabaseConfigured) {
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
           email: adminData.email,
           password: credentials.password
         });
 
-        if (!authError) {
+        if (!authError && authData?.session) {
           authenticated = true;
         } else {
+          authFailureReason = authError?.message || 'Supabase auth failed for admin email';
           console.warn('Supabase auth failed for admin email', { authError, email: adminData.email });
         }
       }
 
-      if (!authenticated && adminData.password_hash) {
-        const passwordValid = await bcrypt.compare(credentials.password, adminData.password_hash);
-        if (passwordValid) {
-          authenticated = true;
-        } else {
-          console.warn('Admin password_hash compare failed');
-        }
-      }
-
-      if (!authenticated && adminData.password) {
-        authenticated = adminData.password === credentials.password;
-      }
-
-      if (!authenticated && adminData.auth_user_id) {
-        const { data: authUser, error: authUserError } = await supabase
-          .from('auth_users')
-          .select('*')
-          .eq('id', adminData.auth_user_id)
-          .maybeSingle();
-
-        if (!authUserError && authUser) {
-          if (authUser.password_hash) {
-            const passwordValid = await bcrypt.compare(credentials.password, authUser.password_hash);
-            if (passwordValid) authenticated = true;
-          } else if (authUser.email) {
-            const { error: authError } = await supabase.auth.signInWithPassword({
-              email: authUser.email,
-              password: credentials.password
-            });
-            if (!authError) authenticated = true;
+      // Fall back to offline password check if Supabase auth not available or failed
+      if (!authenticated) {
+        if (adminData.password_hash) {
+          const passwordValid = await bcrypt.compare(credentials.password, adminData.password_hash);
+          if (passwordValid) {
+            authenticated = true;
+            localAuthFallback = true;
+          } else {
+            console.warn('Admin password_hash compare failed');
           }
-        } else {
-          console.warn('Admin auth_user_id lookup failed', { authUserError, auth_user_id: adminData.auth_user_id });
+        }
+
+        if (!authenticated && adminData.password) {
+          authenticated = adminData.password === credentials.password;
+          if (authenticated) localAuthFallback = true;
+        }
+
+        if (!authenticated && adminData.auth_user_id) {
+          const { data: authUser, error: authUserError } = await supabase
+            .from('auth_users')
+            .select('*')
+            .eq('id', adminData.auth_user_id)
+            .maybeSingle();
+
+          if (!authUserError && authUser) {
+            if (authUser.password_hash) {
+              const passwordValid = await bcrypt.compare(credentials.password, authUser.password_hash);
+              if (passwordValid) {
+                authenticated = true;
+                localAuthFallback = true;
+              }
+            } else if (authUser.email) {
+              const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: authUser.email,
+                password: credentials.password
+              });
+              if (!authError && authData?.session) {
+                authenticated = true;
+              } else {
+                authFailureReason = authError?.message || 'Supabase auth failed for linked auth user';
+                console.warn('Supabase auth failed for linked auth user', { authError, email: authUser.email });
+              }
+            }
+          } else {
+            console.warn('Admin auth_user_id lookup failed', { authUserError, auth_user_id: adminData.auth_user_id });
+          }
         }
       }
 
       if (!authenticated) {
-        setError('Invalid admin credentials');
+        const reason = authFailureReason ? `Invalid admin credentials or login failed: ${authFailureReason}` : 'Invalid admin credentials';
+        setError(reason);
         setLoading(false);
         return;
+      }
+
+      const shouldPersistOfflineAdmin = isOfflineFallback || localAuthFallback;
+      if (shouldPersistOfflineAdmin) {
+        localStorage.setItem('isOfflineAdmin', 'true');
+      } else {
+        localStorage.removeItem('isOfflineAdmin');
       }
 
       try {
